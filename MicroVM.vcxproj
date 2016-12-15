@@ -67,12 +67,14 @@
   <ItemGroup>
     <ClCompile Include="javavm\jar.c" />
     <ClCompile Include="javavm\midpInflate.c" />
+    <ClCompile Include="javavm\vm.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="javavm\include\jar.h" />
     <ClInclude Include="javavm\include\midpInflateint.h" />
     <ClInclude Include="javavm\include\midpInflatetables.h" />
+    <ClInclude Include="javavm\include\vm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

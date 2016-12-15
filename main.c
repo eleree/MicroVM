@@ -28,7 +28,7 @@
 #include <malloc.h>
 
 #include <jar.h>
-
+#include <vm.h>
 #pragma warning(disable:4996)
 
 static long

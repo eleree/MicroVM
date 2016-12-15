@@ -27,6 +27,9 @@
     <ClCompile Include="javavm\midpInflate.c">
       <Filter>源文件\javavm</Filter>
     </ClCompile>
+    <ClCompile Include="javavm\vm.c">
+      <Filter>源文件\javavm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="javavm\include\jar.h">
@@ -36,6 +39,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="javavm\include\midpInflatetables.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="javavm\include\vm.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
