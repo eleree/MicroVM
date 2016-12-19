@@ -78,6 +78,7 @@ addrFromHandleFunction(void* state, void* handle) {
 	return handle;
 }
 
+#if 0 
 int
 main() {
 	FileObj fileObj;
@@ -152,5 +153,22 @@ main() {
 	puts("Test passed");
 	return status;
 }
+#endif
 
+int main(int argc, char ** argv)
+{
+	int32_t vmExitCode = 0;
+	void * vm = createVM();
 
+	if (vm != NULL)
+	{
+		vmExitCode = startVM(vm, argc, argv);
+		destroyVM(vm);
+
+		printf("JavaVM exit code:%d\n");
+	}
+
+	vmAssert(0 > 1);
+	system("pause");
+	return 0;
+}

@@ -30,6 +30,18 @@
     <ClCompile Include="javavm\vm.c">
       <Filter>源文件\javavm</Filter>
     </ClCompile>
+    <ClCompile Include="javavm\memory.c">
+      <Filter>源文件\javavm</Filter>
+    </ClCompile>
+    <ClCompile Include="javavm\classVerify.c">
+      <Filter>源文件\javavm</Filter>
+    </ClCompile>
+    <ClCompile Include="javavm\opcodes.c">
+      <Filter>源文件\javavm</Filter>
+    </ClCompile>
+    <ClCompile Include="javavm\interpreter.c">
+      <Filter>源文件\javavm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="javavm\include\jar.h">
@@ -42,6 +54,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="javavm\include\vm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="javavm\include\assert.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="javavm\include\porting\config.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="javavm\include\opcodes.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
