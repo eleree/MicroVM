@@ -7,6 +7,7 @@
 #include "vm.h"
 
 typedef struct ClassFile{
+	uint8_t * start;
 	uint8_t * data;
 	uint64_t size;
 }ClassFile;

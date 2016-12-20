@@ -43,7 +43,28 @@ typedef struct ConstantPool
 		uintptr_t * string;
 		uint64_t bits;
 		union{
+			uint16_t nameIndxe;
 			uint16_t nameAndTypeIndex;
+			uint16_t stringIndex;
+			union{
+				uint16_t nameIndxe;
+				uint16_t descriptorIndex;
+			}nameAndType;
+			union{
+				uint16_t classIndex;
+				uint16_t nameAndTypeIndex;
+			}fieldRef;
+			union{
+				uint16_t classIndex;
+				uint16_t nameAndTypeIndex;
+			}methodRef;
+			union{
+				uint16_t classIndex;
+				uint16_t nameAndTypeIndex;
+			}interfaceMethodRef;
+			union{
+				uint8_t referenceKind;
+			}methodHandle;
 		}unresolved;
 	}cpItem;
 
@@ -75,4 +96,8 @@ typedef struct Class
 	//Object * jClass;
 	char * sourceFile;
 }Class;
+
+
+Class * parseClassFile(struct ClassFile * classFile);
+
 #endif
