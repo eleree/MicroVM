@@ -42,6 +42,12 @@
     <ClCompile Include="javavm\interpreter.c">
       <Filter>源文件\javavm</Filter>
     </ClCompile>
+    <ClCompile Include="javavm\class.c">
+      <Filter>源文件\javavm</Filter>
+    </ClCompile>
+    <ClCompile Include="javavm\classfile.c">
+      <Filter>源文件\javavm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="javavm\include\jar.h">
@@ -63,6 +69,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="javavm\include\opcodes.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="javavm\include\class.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="javavm\include\classfile.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

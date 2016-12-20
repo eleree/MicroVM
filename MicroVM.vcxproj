@@ -65,6 +65,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="javavm\class.c" />
+    <ClCompile Include="javavm\classfile.c" />
     <ClCompile Include="javavm\classVerify.c" />
     <ClCompile Include="javavm\interpreter.c" />
     <ClCompile Include="javavm\jar.c" />
@@ -76,6 +78,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="javavm\include\assert.h" />
+    <ClInclude Include="javavm\include\class.h" />
+    <ClInclude Include="javavm\include\classfile.h" />
     <ClInclude Include="javavm\include\jar.h" />
     <ClInclude Include="javavm\include\midpInflateint.h" />
     <ClInclude Include="javavm\include\midpInflatetables.h" />
