@@ -203,7 +203,9 @@ void resovleClassFileFields(ClassFile * classFile, Class * c, uint16_t fieldBloc
 			if (strcmp(getConstantPoolMUTF8(c,attrNameIndex), "ConstantValue") == 0)
 			{
 				uint32_t attrLen = readClassUint32(classFile);
-				skipClassBytes(classFile, attrLen);
+				field->constantValue.index = readClassUint16(classFile);
+				printf("ConstantValue Index:%d\n", field->constantValue.index);
+				//skipClassBytes(classFile, attrLen);
 			}else{
 				uint32_t attrLen = readClassUint32(classFile);
 				skipClassBytes(classFile, attrLen);
@@ -316,6 +318,26 @@ Class * parseClassFile(ClassFile *classFile)
 
 	c->methodsCount = readClassUint16(classFile);
 	resovleClassFileMethods(classFile, c, c->methodsCount);
+
+	uint16_t classAttrCount = readClassUint16(classFile);
+	for (uint16_t i = 0; i < classAttrCount; i++)
+	{
+		uint16_t classAttrNameIndex = readClassUint16(classFile);
+		uint32_t classAttrLenght = readClassUint32(classFile);
+		const char * classAttrName = getConstantPoolMUTF8(c, classAttrNameIndex);
+
+		if (strcmp(classAttrName, "SourceFile") == 0)
+		{
+			c->sourceFile = getConstantPoolMUTF8(c, readClassUint16(classFile));
+		}else if (strcmp(classAttrName, "InnerClasses") == 0)
+		{
+			skipClassBytes(classFile, classAttrCount);
+		}else{
+			skipClassBytes(classFile, classAttrCount);
+		}
+		
+	}
+	
 	return c;
 }
 
@@ -360,9 +382,18 @@ Class * loadClass(VMInstance * vm, const char * bootClass)
 	Class * c = parseClassFile(classFile);
 	vmAssert(c != NULL);
 
-	
-
 	vmFree(classFile);
 
 	return c;
+}
+
+void releaseClass(Class * c)
+{
+	vmAssert(c != NULL);
+	if (c->constantPool!=NULL)
+		vmFree(c->constantPool);
+
+	if (c->fieldBlock != NULL)
+		vmFree(c->fieldBlock);
+
 }

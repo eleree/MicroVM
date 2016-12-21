@@ -93,7 +93,7 @@ typedef struct Class
 	//struct ClassLoader * classLoader;
 	bool initStarted;
 	//Object * jClass;
-	char * sourceFile;
+	const char * sourceFile;
 }Class;
 
 /* definition of ClassMember */
