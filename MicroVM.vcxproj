@@ -73,6 +73,9 @@
     <ClCompile Include="javavm\memory.c" />
     <ClCompile Include="javavm\midpInflate.c" />
     <ClCompile Include="javavm\opcodes.c" />
+    <ClCompile Include="javavm\porting\directory.c" />
+    <ClCompile Include="javavm\porting\thread.c" />
+    <ClCompile Include="javavm\utf8.c" />
     <ClCompile Include="javavm\vm.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
@@ -85,6 +88,7 @@
     <ClInclude Include="javavm\include\midpInflatetables.h" />
     <ClInclude Include="javavm\include\opcodes.h" />
     <ClInclude Include="javavm\include\porting\config.h" />
+    <ClInclude Include="javavm\include\utf8.h" />
     <ClInclude Include="javavm\include\vm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

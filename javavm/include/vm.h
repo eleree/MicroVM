@@ -24,11 +24,11 @@ typedef struct VMConfigArgs
 
 }VMConfigArgs;
 
-
-typedef struct JavaVM
+typedef struct VMInstance
 {
 	struct VMConfigArgs configArgs;
-}JavaVM;
+	struct ClassLoader * bootstrapLoader;
+}VMInstance;
 
 void * createVM(void);
 

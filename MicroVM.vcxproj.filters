@@ -16,6 +16,9 @@
     <Filter Include="源文件\javavm">
       <UniqueIdentifier>{b92ff5dd-fc78-4012-9158-c6fa2947cd97}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\javavm\porting">
+      <UniqueIdentifier>{10fb0e38-9d84-4c66-a955-43d5255ed2b0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -48,6 +51,15 @@
     <ClCompile Include="javavm\classfile.c">
       <Filter>源文件\javavm</Filter>
     </ClCompile>
+    <ClCompile Include="javavm\porting\thread.c">
+      <Filter>源文件\javavm\porting</Filter>
+    </ClCompile>
+    <ClCompile Include="javavm\porting\directory.c">
+      <Filter>源文件\javavm\porting</Filter>
+    </ClCompile>
+    <ClCompile Include="javavm\utf8.c">
+      <Filter>源文件\javavm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="javavm\include\jar.h">
@@ -75,6 +87,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="javavm\include\classfile.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="javavm\include\utf8.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

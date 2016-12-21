@@ -7,11 +7,10 @@
 
 #include "porting\config.h"
 
-struct Method;
-struct Field;
+struct MethodBlock;
+struct FieldBlock;
 struct Class;
 struct ClassLoader;
-
 
 enum ConstantType
 {
@@ -40,7 +39,7 @@ typedef struct ConstantPool
 		uintptr_t * fieldRef;
 		uintptr_t * methodRef;
 		uintptr_t * interfaceMethodRef;
-		uintptr_t * string;
+		uint16_t stringIndex;
 		uint64_t bits;
 		union{
 			uint16_t nameIndxe;
@@ -80,10 +79,10 @@ typedef struct Class
 	char* * interfaceNames; // interfaceName  array
 	uint16_t constantPoolCount;
 	struct ConstantPool * constantPool;
-	uint16_t fieldsCount;
-	//struct Field *fields;
+	uint16_t fieldBlockCount;
+	struct FieldBlock * fieldBlock;
 	uint16_t methodsCount;
-	//struct Method * methods;
+	struct MethodBlock * methods;
 	struct Class * superClass;
 	uint16_t interfacesCount;
 	struct Class * *interfaces;
@@ -97,7 +96,98 @@ typedef struct Class
 	char * sourceFile;
 }Class;
 
+/* definition of ClassMember */
+typedef struct ClassMember
+{
+	uint16_t accessFlags;
+	const char * name;
+	const char * descriptor;
+	const char * signature;
+	struct Class * attachClass;
+	uint8_t * annotationData;
+	uint32_t annotationDataLen;
+}ClassMember;
+
+/* definition of Field */
+typedef struct FieldBlock
+{
+	struct ClassMember classMember;
+	union{
+		uint16_t index;
+		uint32_t floatBits;
+		uint32_t doubleBits;
+		uint32_t integer;
+		uint64_t longInteger;
+	}constantValue;
+}FieldBlock;
+
+typedef struct LineNumberTableEntry
+{
+	uint16_t startPc;
+	uint16_t lineNumber;
+}LineNumberTableEntry;
+
+typedef struct LineNumberTable{
+	uint16_t length;
+	LineNumberTableEntry entry[0];
+}LineNumberTable;
+
+typedef struct ClassRef {
+	struct ConstantPool * constantPool;
+	char * className;
+	Class * class;
+}ClassRef;
+
+typedef struct ExceptionHandler
+{
+	int32_t startPc;
+	int32_t endPc;
+	int32_t handlerPc;
+	struct ClassRef *catchType;
+}ExceptionHandler;
+
+typedef struct ExceptionHandlerTable
+{
+	int32_t handlerCount;
+	ExceptionHandler * exceptionHandler;
+}ExceptionHandlerTable;
+
+typedef struct ExceptionsTable{	
+	uint16_t number;
+	uint16_t indexTable[0];
+}ExceptionsTable;
+
+typedef struct MethodBlock
+{
+	struct ClassMember classMember;
+	uint16_t maxStack;
+	uint16_t maxLocals;
+	uint32_t codeLen;
+	uint8_t * code;
+	uint16_t argSlotCount;
+	struct ExceptionHandlerTable * exceptionHandlerTable;
+	struct ExceptionsTable * exceptionTable;
+	LineNumberTable * lineNumberTable;
+	//struct MethodDescriptor * parsedDescriptor;
+	//uint8_t * parameterAnnotationData;
+	//uint32_t parameterAnnotationDataLen;
+	//uint8_t * annotationDefaultData;
+	//uint32_t annotationDefaultDataLen;
+}MethodBlock;
+
+typedef struct ClassList
+{
+	char * className;
+	struct Class * classPtr;
+	struct ClassList * next;
+}ClassList;
+
+typedef struct ClassLoader
+{
+	ClassList * classList;
+}ClassLoader;
 
 Class * parseClassFile(struct ClassFile * classFile);
+Class * loadClass(struct VMInstance * vm, const char * bootClass);
 
 #endif
