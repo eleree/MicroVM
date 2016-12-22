@@ -326,12 +326,12 @@ const char opcodeLengths[256] = {
 	0,
 };
 
-uint8_t opcodeLen(uint8_t opcode)
+uint8_t getOpcodeLen(uint8_t opcode)
 {
 	return opcodeLengths[opcode];
 }
 
-const char * opcodeName(uint8_t opcode)
+const char * getOpcodeName(uint8_t opcode)
 {
 	return opcNames[opcode];
 }
