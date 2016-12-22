@@ -168,7 +168,7 @@ int main(int argc, char ** argv)
 		printf("JavaVM exit code:%d\n");
 	}
 
-	vmAssert(0 > 1);
+	printf("Unfree Memory Size:%lld, Max Used Memory:%lld\n", vmMemoryUsed(), vmMaxMemoryUsed());
 	system("pause");
 	return 0;
 }
