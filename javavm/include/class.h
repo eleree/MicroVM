@@ -62,6 +62,8 @@ typedef struct ConstantPool
 		uintptr_t * interfaceMethodRef;
 		uint16_t stringIndex;
 		uint64_t bits;
+		uint32_t u32;
+		uint64_t u64;
 		union{
 			uint16_t nameIndxe;
 			uint16_t nameAndTypeIndex;

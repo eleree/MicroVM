@@ -57,10 +57,10 @@
     <ClCompile Include="javavm\utf8.c">
       <Filter>源文件\javavm</Filter>
     </ClCompile>
-    <ClCompile Include="javavm\porting\thread.c">
+    <ClCompile Include="javavm\frame.c">
       <Filter>源文件\javavm</Filter>
     </ClCompile>
-    <ClCompile Include="javavm\frame.c">
+    <ClCompile Include="javavm\thread.c">
       <Filter>源文件\javavm</Filter>
     </ClCompile>
   </ItemGroup>

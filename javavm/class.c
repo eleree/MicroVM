@@ -69,7 +69,7 @@ void prepareClassConstantPool(ClassFile * classFile, Class * c)
 			cp->cpItem.stringIndex = readClassUint16(classFile);
 			break;
 		case CONSTATNT_INTEGER:
-			cp->cpItem.bits = readClassUint32(classFile);
+			cp->cpItem.u32 = readClassUint32(classFile);
 			break;
 		case CONSTATNT_FLOAT:
 			cp->cpItem.bits = readClassUint32(classFile);

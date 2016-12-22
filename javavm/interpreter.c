@@ -55,6 +55,19 @@ void processOpcode(Frame * frame, int32_t * pc, uint8_t opcode, uint8_t * operan
 		break;
 	case opc_lconst_0:
 		break;
+	case opc_ldc:
+		switch (frame->method->classMember.attachClass->constantPool[operand.c].cpType){
+		case CONSTATNT_INTEGER:
+			pushOperandInt(frame->operandStack, frame->method->classMember.attachClass->constantPool[operand.c].cpItem.u32);
+			break;
+		case CONSTATNT_FLOAT:
+			break;
+		case CONSTATNT_STRING:
+			break;
+		case CONSTATNT_CLASS:
+			break;
+		}
+		break;
 	case opc_wide:
 		break;
 	}
