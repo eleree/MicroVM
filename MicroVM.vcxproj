@@ -68,6 +68,7 @@
     <ClCompile Include="javavm\class.c" />
     <ClCompile Include="javavm\classfile.c" />
     <ClCompile Include="javavm\classVerify.c" />
+    <ClCompile Include="javavm\frame.c" />
     <ClCompile Include="javavm\interpreter.c" />
     <ClCompile Include="javavm\jar.c" />
     <ClCompile Include="javavm\memory.c" />
@@ -83,11 +84,13 @@
     <ClInclude Include="javavm\include\assert.h" />
     <ClInclude Include="javavm\include\class.h" />
     <ClInclude Include="javavm\include\classfile.h" />
+    <ClInclude Include="javavm\include\frame.h" />
     <ClInclude Include="javavm\include\jar.h" />
     <ClInclude Include="javavm\include\midpInflateint.h" />
     <ClInclude Include="javavm\include\midpInflatetables.h" />
     <ClInclude Include="javavm\include\opcodes.h" />
     <ClInclude Include="javavm\include\porting\config.h" />
+    <ClInclude Include="javavm\include\thread.h" />
     <ClInclude Include="javavm\include\utf8.h" />
     <ClInclude Include="javavm\include\vm.h" />
   </ItemGroup>

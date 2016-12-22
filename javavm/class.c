@@ -397,3 +397,28 @@ void releaseClass(Class * c)
 		vmFree(c->fieldBlock);
 
 }
+
+bool isMethodStatic(MethodBlock * method)
+{
+	if (method == NULL)
+		return false;
+
+	return	0 != (method->classMember.accessFlags & ACC_STATIC);
+}
+
+MethodBlock * getClassStaticMethod(Class * c, const char * name, const char * descriptor)
+{
+	for (uint16_t i = 0; i < c->methodsCount; i++)
+	{
+		if (isMethodStatic(c->methods + i) &&
+			strcmp(c->methods[i].classMember.name, name) == 0 &&
+			strcmp(c->methods[i].classMember.descriptor, descriptor) == 0)
+			return (c->methods + i);
+	}
+	return NULL;
+}
+
+MethodBlock * getClassMainMethod(Class * c)
+{
+	return getClassStaticMethod(c, "main", "([Ljava/lang/String;)V");
+}

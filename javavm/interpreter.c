@@ -1,15 +1,24 @@
+#include "class.h"
+#include "thread.h"
 #include "include\opcodes.h"
 
-void interprete(void)
+void interpret(Class * c, MethodBlock * method, Thread * thread, int argc, char ** argv)
 {
+	Frame * frame = NULL;
+		
+	int32_t pc = 0;
 	uint8_t opcode = 0;
-	switch (opcode)
+
+	for (;;)
 	{
-	case opc_nop:
-		break;
-	case opc_aconst_null:
-		break;
-	default:
-		break;
+		frame = getCurrentFrame(thread);
+		opcode = *(method->code + pc);
+		printf("pc:%d opcode: %d, name:%s\n",pc, opcode, opcodeName(opcode));
+		pc += opcodeLen(opcode);
+
+		if (opcode == opc_return)
+		{
+			break;
+		}
 	}
 }

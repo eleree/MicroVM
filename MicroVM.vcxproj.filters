@@ -51,13 +51,16 @@
     <ClCompile Include="javavm\classfile.c">
       <Filter>源文件\javavm</Filter>
     </ClCompile>
-    <ClCompile Include="javavm\porting\thread.c">
-      <Filter>源文件\javavm\porting</Filter>
-    </ClCompile>
     <ClCompile Include="javavm\porting\directory.c">
       <Filter>源文件\javavm\porting</Filter>
     </ClCompile>
     <ClCompile Include="javavm\utf8.c">
+      <Filter>源文件\javavm</Filter>
+    </ClCompile>
+    <ClCompile Include="javavm\porting\thread.c">
+      <Filter>源文件\javavm</Filter>
+    </ClCompile>
+    <ClCompile Include="javavm\frame.c">
       <Filter>源文件\javavm</Filter>
     </ClCompile>
   </ItemGroup>
@@ -90,6 +93,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="javavm\include\utf8.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="javavm\include\thread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="javavm\include\frame.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

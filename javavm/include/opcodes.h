@@ -258,4 +258,7 @@ enum VMOpcode {
 	opc_invokeinit = 251
 };
 
+uint8_t opcodeLen(uint8_t opcode);
+const char * opcodeName(uint8_t opcode);
+
 #endif
