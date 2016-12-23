@@ -8,7 +8,7 @@ void * createVM(void)
 	vm->bootstrapLoader = vmCalloc(1, sizeof(ClassLoader));
 	vm->configArgs.jrepath = "D:/jre";
 	vm->configArgs.bootpath = "D:/jre";
-	vm->configArgs.bootClass = "HelloWorld";
+	vm->configArgs.bootClass = "GaussTest";
 	if (vm == NULL)
 		return NULL;
 
@@ -36,7 +36,12 @@ int32_t startVM(void* vm, int32_t argc, char** argv)
 	
 	mainClass = loadClass(vmInstance, vmInstance->configArgs.bootClass);
 
-	interpret(mainClass, getClassMainMethod(mainClass), mainThread, argc, argv);
+	MethodBlock * method = getClassMainMethod(mainClass);
+
+	Frame * frame = newFrame(mainThread, method,method->maxLocals, method->maxStack);
+	pushThreadFrame(mainThread, frame);
+
+	interpret(mainClass, method, mainThread, argc, argv);
 
 	return 0;
 }

@@ -39,6 +39,7 @@ typedef union DoubleLong
 
 
 Thread * newThread(void);
+void pushThreadFrame(Thread * thread, Frame * frame);
 Frame * getCurrentFrame(Thread * thread);
 int32_t getFrameNextPC(Frame *frame);
 
