@@ -113,7 +113,7 @@ typedef struct Class
 	uint32_t staticSlotCount;
 	uint32_t slotCount;
 	//Slot * staticVars;
-	//struct ClassLoader * classLoader;
+	struct ClassLoader * classLoader;
 	bool initStarted;
 	//Object * jClass;
 	const char * sourceFile;

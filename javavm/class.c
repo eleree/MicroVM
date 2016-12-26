@@ -255,10 +255,30 @@ void resovleClassFileCodeAttr(ClassFile * classFile, Class * c, MethodBlock * me
 
 }
 
+#define SCAN_SIG(p, D, S)			\
+	p++;               /* skip start ( */	\
+	while (*p != ')') {	\
+	if ((*p == 'J') || (*p == 'D')) {\
+		D;					\
+		p++;					\
+	}else {	\
+	S;					\
+	if (*p == '[')				\
+	for (p++; *p == '['; p++);		\
+	if (*p == 'L')				\
+	while (*p++ != ';');		\
+	else					\
+	p++;				\
+	}						\
+	}						\
+	p++;               /* skip end ) */
+
+
 void resovleClassFileMethods(ClassFile * classFile, Class * c, uint16_t methodBlockCount)
 {
 	if (methodBlockCount == 0)
 		return;
+	/* prepare class methods */
 	c->methods = vmCalloc(methodBlockCount, sizeof(MethodBlock));
 	for (uint16_t i = 0; i < methodBlockCount; i++)
 	{
@@ -285,7 +305,23 @@ void resovleClassFileMethods(ClassFile * classFile, Class * c, uint16_t methodBl
 				skipClassBytes(classFile, skipBytes);
 			}
 		}
+
+		/* caculate method args count */
+		{
+			int count = 0;
+			const char *sig = method->classMember.descriptor;
+			/* calculate argument count from signature */
+			SCAN_SIG(sig, count += 2, count++);
+			if (method->classMember.accessFlags & ACC_STATIC)
+				method->argSlotCount = count;
+			else
+				method->argSlotCount = count + 1;
+			printf("Method Descriptor:%s, argSlot:%d\n", method->classMember.descriptor, method->argSlotCount);
+		}
+
+		method->classMember.attachClass = c;
 	}
+
 }
 
 Class * parseClassFile(ClassFile *classFile)
@@ -341,11 +377,6 @@ Class * parseClassFile(ClassFile *classFile)
 	return c;
 }
 
-void defineClass(ClassLoader * classLoader, Class * c)
-{
-
-}
-
 void addClassLoaderList(ClassLoader * classLoader, Class * newClass)
 {
 	ClassList * classList = classLoader->classList;
@@ -373,6 +404,15 @@ void addClassLoaderList(ClassLoader * classLoader, Class * newClass)
 	return;
 }
 
+void defineClass(ClassLoader * classLoader, Class * c)
+{
+	c->classLoader =  classLoader;
+}
+
+void linkClass(ClassLoader * classLoader, Class * c)
+{
+	c->classLoader = classLoader;
+}
 
 Class * loadClass(VMInstance * vm, const char * bootClass)
 {
@@ -381,6 +421,8 @@ Class * loadClass(VMInstance * vm, const char * bootClass)
 
 	Class * c = parseClassFile(classFile);
 	vmAssert(c != NULL);
+
+	defineClass(vm->bootstrapLoader, c);
 
 	vmFree(classFile);
 

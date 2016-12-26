@@ -8,7 +8,7 @@ void * createVM(void)
 	vm->bootstrapLoader = vmCalloc(1, sizeof(ClassLoader));
 	vm->configArgs.jrepath = "D:/jre";
 	vm->configArgs.bootpath = "D:/jre";
-	vm->configArgs.bootClass = "GaussTest";
+	vm->configArgs.bootClass = "FibonacciTest";
 	if (vm == NULL)
 		return NULL;
 
