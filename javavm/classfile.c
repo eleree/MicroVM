@@ -144,3 +144,4 @@ ClassFile * loadClassFile(ClassLoader * classLoader, const char * classname)
 	
 	return classFile;
 }
+

@@ -59,7 +59,7 @@ typedef struct SymbolicRef {
 }SymbolicRef;
 
 typedef struct  MethodRef{
-	SymbolicRef symbolicRef;
+	struct SymbolicRef symbolicRef;
 
 	/* MemberRef */
 	const char * name;
@@ -69,6 +69,18 @@ typedef struct  MethodRef{
 	struct MethodBlock * method;
 }MethodRef;
 
+typedef struct  FieldRef{
+	/* SymRef*/
+	struct SymbolicRef symbolicRef;
+
+	/* MemberRef */
+	const char * name;
+	const char * descriptor;
+	struct Class * attachClass;
+
+	/* Field */
+	struct FieldBlock * field;
+}FieldRef;
 
 
 typedef struct ConstantPool
@@ -77,7 +89,7 @@ typedef struct ConstantPool
 	union{
 		char * mutf8String;
 		struct ClassRef * classRef;
-		uintptr_t * fieldRef;
+		struct FieldRef * fieldRef;
 		struct MethodRef * methodRef;
 		uintptr_t * interfaceMethodRef;
 		uint16_t stringIndex;
@@ -97,7 +109,7 @@ typedef struct ConstantPool
 			uint16_t nameAndTypeIndex;
 			uint16_t stringIndex;
 	
-			union{
+			struct{
 				uint16_t classIndex;
 				uint16_t nameAndTypeIndex;
 			}fieldRef;
@@ -105,7 +117,7 @@ typedef struct ConstantPool
 				uint16_t classIndex;
 				uint16_t nameAndTypeIndex;
 			}methodRef;
-			union{
+			struct{
 				uint16_t classIndex;
 				uint16_t nameAndTypeIndex;
 			}interfaceMethodRef;
@@ -120,9 +132,9 @@ typedef struct ConstantPool
 typedef struct Class
 {
 	uint16_t accessFlags;
-	char * name;
-	char * packageName;
-	char * superClassName;
+	const char * name;
+	const char * packageName;
+	const char * superClassName;
 	uint16_t interfaceNamesCount;
 	char* * interfaceNames; // interfaceName  array
 	uint16_t constantPoolCount;
@@ -223,7 +235,7 @@ typedef struct MethodBlock
 
 typedef struct ClassList
 {
-	char * className;
+	const char * className;
 	struct Class * classPtr;
 	struct ClassList * next;
 }ClassList;

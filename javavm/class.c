@@ -174,8 +174,18 @@ void resolveClassConstantPool(ClassFile * classFile, Class * c)
 			//cp->cpItem.bits = readClassUint16(classFile);
 			break;
 		case CONSTATNT_FIELDREF:
-			//cp->cpItem.unresolved.fieldRef.classIndex = readClassUint16(classFile);
-			//cp->cpItem.unresolved.fieldRef.nameAndTypeIndex = readClassUint16(classFile);
+		{
+			{
+				uint16_t classIndex = cp->cpItem.unresolved.fieldRef.classIndex;
+				uint16_t nameAndTypeIndex = cp->cpItem.unresolved.fieldRef.nameAndTypeIndex;
+				cp->cpItem.fieldRef = vmCalloc(1, sizeof(FieldRef));
+				cp->cpItem.fieldRef->attachClass = c;
+				cp->cpItem.fieldRef->symbolicRef.fromClass = c;
+				cp->cpItem.fieldRef->symbolicRef.className = (c->constantPool + classIndex)->cpItem.classRef->symbolicRef.className;
+				cp->cpItem.fieldRef->name = getConstalPoolNameAndTypeName(c, nameAndTypeIndex);
+				cp->cpItem.fieldRef->descriptor = getConstalPoolNameAndTypeDescriptor(c, nameAndTypeIndex);
+			}				
+		}
 			break;
 		case CONSTATNT_METHODREF:
 		{
@@ -424,10 +434,15 @@ Class * parseClassFile(ClassFile *classFile)
 
 	prepareClassConstantPool(classFile, c);
 	resolveClassConstantPool(classFile, c);
-
+	
 	c->accessFlags = readClassUint16(classFile);
 	uint16_t thisClass = readClassUint16(classFile);
 	uint16_t superClass = readClassUint16(classFile);
+
+	c->name = (c->constantPool + thisClass)->cpItem.classRef->symbolicRef.className;
+
+	if (superClass != 0) 
+		c->superClassName = (c->constantPool + superClass)->cpItem.classRef->symbolicRef.className;
 
 	c->interfacesCount = readClassUint16(classFile);	
 	if (c->interfacesCount > 0)
@@ -497,10 +512,34 @@ void addClassLoaderList(ClassLoader * classLoader, Class * newClass)
 	return;
 }
 
+void resolveSuperClass(ClassLoader * classLoader, Class * subClass)
+{
+	if (strcmp(subClass->name, "java/lang/Object") != 0)
+		subClass->superClass = loadClass(classLoader, subClass->superClassName);
+}
+
+void resolveInterfaces(ClassLoader * classLoader, Class * subClass)
+{
+	if (subClass->interfacesCount == 0)
+		return;
+	if (subClass->interfaceNamesCount != subClass->interfacesCount)
+		printf("Interface Name Count != Interface Count, maybe this is a BUG.\n");
+
+	subClass->interfaces = calloc(subClass->interfacesCount, sizeof(Class *));
+	for (uint16_t i = 0; i < subClass->interfacesCount; i++)
+	{
+		subClass->interfaces[i] = loadClass(classLoader, subClass->interfaceNames[i]);
+	}
+}
+
+
 //jvms-5.4
 void defineClass(ClassLoader * classLoader, Class * c)
 {
 	c->classLoader =  classLoader;
+	resolveSuperClass(classLoader, c);
+	resolveInterfaces(classLoader, c);
+	addClassLoaderList(classLoader, c);
 }
 
 void linkClass(ClassLoader * classLoader, Class * c)
@@ -519,6 +558,7 @@ Class * loadClass(ClassLoader * classLoader, const char * className)
 	defineClass(classLoader, c);
 
 	linkClass(classLoader, c);
+
 	vmFree(classFile);
 
 	return c;

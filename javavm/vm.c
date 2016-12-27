@@ -37,7 +37,6 @@ int32_t startVM(void* vm, int32_t argc, char** argv)
 	if (initVM(vm) < 0)
 		return -1;
 
-	
 	mainClass = loadClass(vmInstance->bootstrapLoader, vmInstance->configArgs.bootClass);
 
 	MethodBlock * method = getClassMainMethod(mainClass);
