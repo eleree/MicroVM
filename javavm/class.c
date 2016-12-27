@@ -1,6 +1,6 @@
 #include "class.h"
 #include "classfile.h"
-
+#include "thread.h"
 
 int32_t readAndCheckVersion(ClassFile * classFile)
 {
@@ -177,14 +177,16 @@ void resolveClassConstantPool(ClassFile * classFile, Class * c)
 			//cp->cpItem.unresolved.fieldRef.classIndex = readClassUint16(classFile);
 			//cp->cpItem.unresolved.fieldRef.nameAndTypeIndex = readClassUint16(classFile);
 			break;
-		case CONSTATNT_METHODREF:;
-				uint16_t classIndex = cp->cpItem.unresolved.methodRef.classIndex;
-				uint16_t nameAndTypeIndex = cp->cpItem.unresolved.methodRef.nameAndTypeIndex;
-				cp->cpItem.methodRef = vmCalloc(1, sizeof(MethodRef));
-				cp->cpItem.methodRef->symbolicRef.fromClass = c;
-				cp->cpItem.methodRef->symbolicRef.className = (c->constantPool + classIndex)->cpItem.classRef->symbolicRef.className;
-				cp->cpItem.methodRef->name = getConstalPoolNameAndTypeName(c, nameAndTypeIndex);
-				cp->cpItem.methodRef->descriptor = getConstalPoolNameAndTypeDescriptor(c, nameAndTypeIndex);
+		case CONSTATNT_METHODREF:
+		{
+			uint16_t classIndex = cp->cpItem.unresolved.methodRef.classIndex;
+			uint16_t nameAndTypeIndex = cp->cpItem.unresolved.methodRef.nameAndTypeIndex;
+			cp->cpItem.methodRef = vmCalloc(1, sizeof(MethodRef));
+			cp->cpItem.methodRef->symbolicRef.fromClass = c;
+			cp->cpItem.methodRef->symbolicRef.className = (c->constantPool + classIndex)->cpItem.classRef->symbolicRef.className;
+			cp->cpItem.methodRef->name = getConstalPoolNameAndTypeName(c, nameAndTypeIndex);
+			cp->cpItem.methodRef->descriptor = getConstalPoolNameAndTypeDescriptor(c, nameAndTypeIndex);
+		}
 			break;
 		case CONSTATNT_INTERFACE_METHODREF:
 			//cp->cpItem.unresolved.interfaceMethodRef.classIndex = readClassUint16(classFile);
@@ -249,6 +251,16 @@ const char * getConstalPoolNameAndTypeDescriptor(Class * c, uint16_t nameAndType
 	if (c->constantPool[nameAndTypeIndex].cpType == CONSTATNT_NAME_AND_TYPE)
 	{
 		return getConstantPoolMUTF8(c, c->constantPool[nameAndTypeIndex].cpItem.nameAndType.descriptorIndex);
+	}
+	return NULL;
+}
+
+MethodRef * getClassConstantPoolMethodRef(Class * c, uint16_t index)
+{
+	vmAssert(c->constantPool[index].cpType == CONSTATNT_METHODREF);
+	if (c->constantPool[index].cpType == CONSTATNT_METHODREF)
+	{
+		return c->constantPool[index].cpItem.methodRef;
 	}
 	return NULL;
 }
@@ -485,6 +497,7 @@ void addClassLoaderList(ClassLoader * classLoader, Class * newClass)
 	return;
 }
 
+//jvms-5.4
 void defineClass(ClassLoader * classLoader, Class * c)
 {
 	c->classLoader =  classLoader;
@@ -495,16 +508,17 @@ void linkClass(ClassLoader * classLoader, Class * c)
 	c->classLoader = classLoader;
 }
 
-Class * loadClass(VMInstance * vm, const char * className)
+Class * loadClass(ClassLoader * classLoader, const char * className)
 {
-	ClassFile * classFile = loadClassFile(&vm->configArgs, className);
+	ClassFile * classFile = loadClassFile(classLoader, className);
 	vmAssert(classFile != NULL);
 
 	Class * c = parseClassFile(classFile);
 	vmAssert(c != NULL);
 
-	defineClass(vm->bootstrapLoader, c);
+	defineClass(classLoader, c);
 
+	linkClass(classLoader, c);
 	vmFree(classFile);
 
 	return c;
@@ -521,13 +535,18 @@ void releaseClass(Class * c)
 
 }
 
+
+void initClass(Thread * thread, Class * c)
+{
+
+}
+
 bool isMethodStatic(MethodBlock * method)
 {
-	if (method == NULL)
-		return false;
-
+	vmAssert(method != NULL);
 	return	0 != (method->classMember.accessFlags & ACC_STATIC);
 }
+
 
 MethodBlock * getClassStaticMethod(Class * c, const char * name, const char * descriptor)
 {

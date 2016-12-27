@@ -2,6 +2,8 @@
 #include "class.h"
 #include "frame.h"
 #include "thread.h"
+
+VMInstance * vmInstance = NULL;
 void * createVM(void)
 {
 	VMInstance * vm = vmCalloc(1, sizeof(VMInstance));
@@ -9,6 +11,8 @@ void * createVM(void)
 	vm->configArgs.jrepath = "D:/jre";
 	vm->configArgs.bootpath = "D:/jre";
 	vm->configArgs.bootClass = "FibonacciTest";
+	vm->bootstrapLoader->classpath = "D:/jre";
+	vm->bootstrapLoader->zippath = "D:/jre/rt.jar";
 	if (vm == NULL)
 		return NULL;
 
@@ -34,7 +38,7 @@ int32_t startVM(void* vm, int32_t argc, char** argv)
 		return -1;
 
 	
-	mainClass = loadClass(vmInstance, vmInstance->configArgs.bootClass);
+	mainClass = loadClass(vmInstance->bootstrapLoader, vmInstance->configArgs.bootClass);
 
 	MethodBlock * method = getClassMainMethod(mainClass);
 
@@ -43,6 +47,7 @@ int32_t startVM(void* vm, int32_t argc, char** argv)
 
 	interpret(mainClass, method, mainThread, argc, argv);
 
+	vmFree(frame);
 	return 0;
 }
 

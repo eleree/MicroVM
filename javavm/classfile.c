@@ -129,14 +129,14 @@ ClassFile * readClassFileBootstrapDirEntry(const char * bootdir, const char * cl
 }
 
 
-ClassFile * loadClassFile(VMConfigArgs * configArgs, const char * classname)
+ClassFile * loadClassFile(ClassLoader * classLoader, const char * classname)
 {
 	ClassFile * classFile = NULL;
 	
-	if (configArgs->jrepath != NULL)
-		classFile = readClassFileBootstrapDirEntry(configArgs->jrepath, classname);
-	else if (configArgs->bootpath != NULL)
-		classFile = readClassFileBootstrapDirEntry(configArgs->bootpath, classname);
+	if (classLoader->classpath != NULL)
+		classFile = readClassFileBootstrapDirEntry(classLoader->classpath, classname);
+	else if (classLoader->zippath != NULL)
+		classFile = readClassFileBootstrapDirEntry(classLoader->classpath, classname);
 	else
 	{
 

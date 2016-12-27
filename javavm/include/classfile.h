@@ -19,6 +19,6 @@ uint32_t readClassUint32(ClassFile * classFile);
 uint64_t readClassUint64(ClassFile * classFile);
 int32_t skipClassBytes(ClassFile * classFile, uint32_t skipBytes);
 
-ClassFile * loadClassFile(VMConfigArgs * configArgs, const char * classname);
+ClassFile * loadClassFile(struct ClassLoader * classLoader, const char * classname);
 
 #endif

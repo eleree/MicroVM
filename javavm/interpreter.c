@@ -22,6 +22,38 @@ typedef union{
 	}iinc;
 }Operand;
 
+
+void InvokeMethod(Frame * invokerFrame, MethodBlock * method) {
+
+}
+//jvms 5.4.3.3.Method Resolution
+static void execute_INVOKE_STATIC(struct Frame * frame, uint16_t index)
+{
+	OperandStack * operandStack = frame->operandStack;
+
+	MethodRef * methodRef = getClassConstantPoolMethodRef(frame->method->classMember.attachClass, index);
+
+	MethodBlock * method = resolveMethod(methodRef);
+
+	if (!isMethodStatic(method))
+	{
+		printf("java.lang.IncompatibleClassChangeError\n");
+		exit(131);
+	}
+
+	Class * c = method->classMember.attachClass;
+
+	if (!c->initStarted)
+	{
+		//revertFrameNextPC(frame);
+		frame->nextpc = frame->thread->pc;
+		initClass(frame->thread, c);
+	}
+
+	//printf("Invode classs:%s method:%s,desc:%s\n", methodRef->symRef.className, methodRef->name, methodRef->descriptor);
+	InvokeMethod(frame, method);
+}
+
 void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_t opcodeLen)
 {
 	Operand operand = { 0 };
@@ -1053,23 +1085,24 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 	}
 		break;
 	case opc_if_acmpeq:
-	{
-						  Object * ref2 = popOperandRef(operandStack);
-						  Object * ref1 = popOperandRef(operandStack);
-						  if (ref2 == ref1)
-							  frame->nextpc = frame->nextpc + (int16_t)operand.s;
-						  return;
-
-	}
+		do
+		{
+			Object * ref2 = popOperandRef(operandStack);
+			Object * ref1 = popOperandRef(operandStack);
+			if (ref2 == ref1)
+				frame->nextpc = frame->nextpc + (int16_t)operand.s;
+			return;
+		} while (0);
 		break;
 	case opc_if_acmpne:
-	{
-						  Object * ref2 = popOperandRef(operandStack);
-						  Object * ref1 = popOperandRef(operandStack);
-						  if (ref2 != ref1)
-							  frame->nextpc = frame->nextpc + (int16_t)operand.s;
-
-	}
+		do
+		{
+			Object * ref2 = popOperandRef(operandStack);
+			Object * ref1 = popOperandRef(operandStack);
+			if (ref2 != ref1)
+				frame->nextpc = frame->nextpc + (int16_t)operand.s;
+			return;
+		} while (0);
 		break;
 	case opc_goto:
 		frame->nextpc = frame->nextpc + (int16_t)operand.s;
@@ -1246,6 +1279,7 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 
 	}
 
+	frame->lastpc = frame->nextpc;
 	frame->nextpc += getOpcodeLen(opcode);
 }
 void dumpLocalVars(Frame * frame)

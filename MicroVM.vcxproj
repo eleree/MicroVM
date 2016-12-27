@@ -75,6 +75,7 @@
     <ClCompile Include="javavm\midpInflate.c" />
     <ClCompile Include="javavm\opcodes.c" />
     <ClCompile Include="javavm\porting\directory.c" />
+    <ClCompile Include="javavm\resolve.c" />
     <ClCompile Include="javavm\thread.c" />
     <ClCompile Include="javavm\utf8.c" />
     <ClCompile Include="javavm\vm.c" />

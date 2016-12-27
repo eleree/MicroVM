@@ -230,6 +230,8 @@ typedef struct ClassList
 
 typedef struct ClassLoader
 {
+	char * classpath;
+	char * zippath;
 	ClassList * classList;
 }ClassLoader;
 
@@ -245,8 +247,9 @@ typedef struct Object {
 	void * extra;
 }Object;
 
+void initClass(struct Thread * thread, struct Class * c);
 Class * parseClassFile(struct ClassFile * classFile);
-Class * loadClass(struct VMInstance * vm, const char * bootClass);
+Class * loadClass(struct ClassLoader * classLoader, const char * className);
 
 MethodBlock * getClassMainMethod(Class * c);
 
@@ -254,5 +257,12 @@ MethodBlock * getClassMainMethod(Class * c);
 const char * getConstantPoolMUTF8(Class * c, uint16_t index);
 const char * getConstalPoolNameAndTypeName(Class * c, uint16_t nameAndTypeIndex);
 const char * getConstalPoolNameAndTypeDescriptor(Class * c, uint16_t nameAndTypeIndex);
+MethodRef * getClassConstantPoolMethodRef(Class * c, uint16_t index);
+
+
+/* resolve class/method/field reference */
+bool isMethodStatic(MethodBlock * method);
+
+MethodBlock * resolveMethod(MethodRef * methodRef);
 
 #endif

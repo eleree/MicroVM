@@ -13,7 +13,7 @@ typedef struct FrameStack  {
 typedef struct Thread
 {
 	int32_t pc;   
-	FrameStack *stack;
+	FrameStack *stack;	
 }Thread;
 
 typedef union FloatInt
