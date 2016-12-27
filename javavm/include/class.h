@@ -51,32 +51,57 @@ enum {
 	ACC_ENUM = 0x4000 // class field
 };
 
+// symbolic reference
+typedef struct SymbolicRef {
+	struct Class * fromClass;
+	const char * className;
+	struct Class * inClass;
+}SymbolicRef;
+
+typedef struct  MethodRef{
+	SymbolicRef symbolicRef;
+
+	/* MemberRef */
+	const char * name;
+	const char * descriptor;
+
+	/* Method */
+	struct MethodBlock * method;
+}MethodRef;
+
+
+
 typedef struct ConstantPool
 {
 	uint8_t cpType;
 	union{
 		char * mutf8String;
-		uintptr_t * classRef;
+		struct ClassRef * classRef;
 		uintptr_t * fieldRef;
-		uintptr_t * methodRef;
+		struct MethodRef * methodRef;
 		uintptr_t * interfaceMethodRef;
 		uint16_t stringIndex;
-		uint64_t bits;
 		uint32_t u32;
 		uint64_t u64;
+		int32_t s32;
+		int64_t s64;
+		float floatVal;
+		double doubleVal;
+		struct{
+			uint16_t nameIndex;
+			uint16_t descriptorIndex;
+		}nameAndType;
 		union{
-			uint16_t nameIndxe;
+			uint64_t bits;
+			uint16_t nameIndex;
 			uint16_t nameAndTypeIndex;
 			uint16_t stringIndex;
-			union{
-				uint16_t nameIndxe;
-				uint16_t descriptorIndex;
-			}nameAndType;
+	
 			union{
 				uint16_t classIndex;
 				uint16_t nameAndTypeIndex;
 			}fieldRef;
-			union{
+			struct{
 				uint16_t classIndex;
 				uint16_t nameAndTypeIndex;
 			}methodRef;
@@ -155,10 +180,8 @@ typedef struct LineNumberTable{
 	LineNumberTableEntry entry[0];
 }LineNumberTable;
 
-typedef struct ClassRef {
-	struct ConstantPool * constantPool;
-	char * className;
-	Class * c;
+typedef struct  ClassRef{
+	SymbolicRef symbolicRef;
 }ClassRef;
 
 typedef struct ExceptionHandler
@@ -226,5 +249,10 @@ Class * parseClassFile(struct ClassFile * classFile);
 Class * loadClass(struct VMInstance * vm, const char * bootClass);
 
 MethodBlock * getClassMainMethod(Class * c);
+
+/* constant pool */
+const char * getConstantPoolMUTF8(Class * c, uint16_t index);
+const char * getConstalPoolNameAndTypeName(Class * c, uint16_t nameAndTypeIndex);
+const char * getConstalPoolNameAndTypeDescriptor(Class * c, uint16_t nameAndTypeIndex);
 
 #endif

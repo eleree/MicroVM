@@ -27,6 +27,7 @@ typedef struct  Frame  {
 	struct OperandStack * operandStack;
 	struct Thread * thread;
 	int32_t nextpc;
+	int32_t lastpc;
 	struct MethodBlock * method;	
 }Frame;
 

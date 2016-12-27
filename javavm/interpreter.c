@@ -117,6 +117,19 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 	case opc_ldc_w:
 		break;
 	case opc_ldc2_w:
+		switch (frame->method->classMember.attachClass->constantPool[operand.b].cpType)
+		{
+		case CONSTATNT_LONG:
+			pushOperandLong(operandStack, frame->method->classMember.attachClass->constantPool[operand.b].cpItem.s64);
+			break;
+		case CONSTATNT_DOUBLE:
+			pushOperandDouble(operandStack, frame->method->classMember.attachClass->constantPool[operand.b].cpItem.doubleVal);
+			break;
+		default:
+			printf("java.lang.ClassFormatError\n");
+			exit(0);
+			break;
+		}
 		break;
 	case opc_iload:
 		pushOperandInt(operandStack, getLocalVarsInt(localVars, operand.b));

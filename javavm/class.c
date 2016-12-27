@@ -42,6 +42,7 @@ void prepareClassConstantPool(ClassFile * classFile, Class * c)
 {
 	c->constantPoolCount = readClassUint16(classFile);
 	c->constantPool = vmCalloc(sizeof(ConstantPool), c->constantPoolCount);
+
 	for (uint16_t i = 1; i < c->constantPoolCount; i++)
 	{
 		uint8_t tag = readClassUint8(classFile);
@@ -51,7 +52,7 @@ void prepareClassConstantPool(ClassFile * classFile, Class * c)
 		switch (tag)
 		{
 		case CONSTATNT_CLASS:
-			cp->cpItem.bits = readClassUint16(classFile);
+			cp->cpItem.unresolved.nameIndex = readClassUint16(classFile);
 			break;
 		case CONSTATNT_FIELDREF:
 			cp->cpItem.unresolved.fieldRef.classIndex = readClassUint16(classFile);
@@ -72,19 +73,19 @@ void prepareClassConstantPool(ClassFile * classFile, Class * c)
 			cp->cpItem.u32 = readClassUint32(classFile);
 			break;
 		case CONSTATNT_FLOAT:
-			cp->cpItem.bits = readClassUint32(classFile);
+			cp->cpItem.unresolved.bits = readClassUint32(classFile);
 			break;
 		case CONSTATNT_LONG:
-			cp->cpItem.bits = ((uint64_t)readClassUint32(classFile)) << 32;
-			cp->cpItem.bits |= readClassUint32(classFile);			
+			cp->cpItem.unresolved.bits = ((uint64_t)readClassUint32(classFile)) << 32;
+			cp->cpItem.unresolved.bits |= readClassUint32(classFile);
 			break;
 		case CONSTATNT_DOUBLE:
-			cp->cpItem.bits = ((uint64_t)readClassUint32(classFile)) << 32;
-			cp->cpItem.bits |= readClassUint32(classFile);
+			cp->cpItem.unresolved.bits = ((uint64_t)readClassUint32(classFile)) << 32;
+			cp->cpItem.unresolved.bits |= readClassUint32(classFile);
 			break;
 		case CONSTATNT_NAME_AND_TYPE:
-			cp->cpItem.unresolved.nameAndType.nameIndxe = readClassUint16(classFile);
-			cp->cpItem.unresolved.nameAndType.descriptorIndex = readClassUint16(classFile);
+			cp->cpItem.nameAndType.nameIndex = readClassUint16(classFile);
+			cp->cpItem.nameAndType.descriptorIndex = readClassUint16(classFile);
 			break;
 		case CONSTATNT_UTF8:			
 			do
@@ -110,9 +111,60 @@ void prepareClassConstantPool(ClassFile * classFile, Class * c)
 	}
 }
 
+int64_t intToLong(uint32_t high, uint32_t low)
+{
+	typedef union LongInt
+	{
+		struct bitsData{
+			uint32_t low;
+			uint32_t high;
+		};
+		int64_t  longData;
+	}LongInt;
+
+	LongInt transData;
+	transData.high = high;
+	transData.low = low;
+	return transData.longData;
+}
+
+double longToDouble(uint64_t l)
+{
+	typedef union DoubleLong
+	{
+		uint64_t bitsData;
+		double doubleData;
+	}DoubleLong;
+
+	DoubleLong transData;
+	transData.bitsData = l;
+	return transData.doubleData;
+}
+
+
 void resolveClassConstantPool(ClassFile * classFile, Class * c)
 {
-	for (uint16_t i = 0; i < c->constantPoolCount; i++)
+
+	for (uint16_t i = 1; i < c->constantPoolCount; i++)
+	{
+		ConstantPool * cp = c->constantPool + i;
+		uint8_t tag = cp->cpType;
+		switch (tag)
+		{
+		case CONSTATNT_CLASS:
+			do{
+				uint16_t classNameIndex = cp->cpItem.unresolved.nameIndex;
+				cp->cpItem.classRef = vmCalloc(1, sizeof(ClassRef));
+				cp->cpItem.classRef->symbolicRef.className = getConstantPoolMUTF8(c, classNameIndex);
+				cp->cpItem.classRef->symbolicRef.fromClass = c;
+			} while (0);			
+			break;
+		default:
+			break;
+		}
+	}
+
+	for (uint16_t i = 1; i < c->constantPoolCount; i++)
 	{
 		ConstantPool * cp = c->constantPool + i;
 		uint8_t tag = cp->cpType;
@@ -125,9 +177,14 @@ void resolveClassConstantPool(ClassFile * classFile, Class * c)
 			//cp->cpItem.unresolved.fieldRef.classIndex = readClassUint16(classFile);
 			//cp->cpItem.unresolved.fieldRef.nameAndTypeIndex = readClassUint16(classFile);
 			break;
-		case CONSTATNT_METHODREF:
-			//cp->cpItem.unresolved.methodRef.classIndex = readClassUint16(classFile);
-			//cp->cpItem.unresolved.methodRef.nameAndTypeIndex = readClassUint16(classFile);
+		case CONSTATNT_METHODREF:;
+				uint16_t classIndex = cp->cpItem.unresolved.methodRef.classIndex;
+				uint16_t nameAndTypeIndex = cp->cpItem.unresolved.methodRef.nameAndTypeIndex;
+				cp->cpItem.methodRef = vmCalloc(1, sizeof(MethodRef));
+				cp->cpItem.methodRef->symbolicRef.fromClass = c;
+				cp->cpItem.methodRef->symbolicRef.className = (c->constantPool + classIndex)->cpItem.classRef->symbolicRef.className;
+				cp->cpItem.methodRef->name = getConstalPoolNameAndTypeName(c, nameAndTypeIndex);
+				cp->cpItem.methodRef->descriptor = getConstalPoolNameAndTypeDescriptor(c, nameAndTypeIndex);
 			break;
 		case CONSTATNT_INTERFACE_METHODREF:
 			//cp->cpItem.unresolved.interfaceMethodRef.classIndex = readClassUint16(classFile);
@@ -143,12 +200,10 @@ void resolveClassConstantPool(ClassFile * classFile, Class * c)
 			//cp->cpItem.bits = readClassUint32(classFile);
 			break;
 		case CONSTATNT_LONG:
-			//cp->cpItem.bits = ((uint64_t)readClassUint32(classFile)) << 32;
-			//cp->cpItem.bits |= readClassUint32(classFile);
+			cp->cpItem.s64 = cp->cpItem.unresolved.bits;
 			break;
 		case CONSTATNT_DOUBLE:
-			//cp->cpItem.bits = ((uint64_t)readClassUint32(classFile)) << 32;
-			//cp->cpItem.bits |= readClassUint32(classFile);
+			cp->cpItem.doubleVal = longToDouble(cp->cpItem.unresolved.bits);
 			break;
 		case CONSTATNT_NAME_AND_TYPE:
 			//cp->cpItem.unresolved.nameAndType.nameIndxe = readClassUint16(classFile);
@@ -178,6 +233,24 @@ const char * getConstantPoolMUTF8(Class * c, uint16_t index)
 	vmAssert(c->constantPool[index].cpType == CONSTATNT_UTF8);
 
 	return c->constantPool[index].cpItem.mutf8String;
+}
+
+const char * getConstalPoolNameAndTypeName(Class * c, uint16_t nameAndTypeIndex)
+{
+	if (c->constantPool[nameAndTypeIndex].cpType == CONSTATNT_NAME_AND_TYPE)
+	{
+		return getConstantPoolMUTF8(c, c->constantPool[nameAndTypeIndex].cpItem.nameAndType.nameIndex);
+	}
+	return NULL;
+}
+
+const char * getConstalPoolNameAndTypeDescriptor(Class * c, uint16_t nameAndTypeIndex)
+{
+	if (c->constantPool[nameAndTypeIndex].cpType == CONSTATNT_NAME_AND_TYPE)
+	{
+		return getConstantPoolMUTF8(c, c->constantPool[nameAndTypeIndex].cpItem.nameAndType.descriptorIndex);
+	}
+	return NULL;
 }
 
 void resovleClassFileFields(ClassFile * classFile, Class * c, uint16_t fieldBlockCount)
@@ -316,7 +389,8 @@ void resovleClassFileMethods(ClassFile * classFile, Class * c, uint16_t methodBl
 				method->argSlotCount = count;
 			else
 				method->argSlotCount = count + 1;
-			printf("Method Descriptor:%s, argSlot:%d\n", method->classMember.descriptor, method->argSlotCount);
+			printf("Method Descriptor:%s, argSlot:%d\n", method->classMember.descriptor, 
+																	method->argSlotCount);
 		}
 
 		method->classMember.attachClass = c;
@@ -343,10 +417,17 @@ Class * parseClassFile(ClassFile *classFile)
 	uint16_t thisClass = readClassUint16(classFile);
 	uint16_t superClass = readClassUint16(classFile);
 
-	c->interfaceNamesCount = readClassUint16(classFile);
-	if (c->interfaceNamesCount > 0)
+	c->interfacesCount = readClassUint16(classFile);	
+	if (c->interfacesCount > 0)
 	{
-		c->interfaceNames = vmCalloc(c->interfaceNamesCount, sizeof(char*));
+		c->interfaces = vmCalloc(c->interfacesCount, sizeof(Class));
+		for (uint16_t i = 0; i < c->interfacesCount; i++)
+		{
+			uint16_t interfaceIndex = readClassUint16(classFile);
+			const char * interfaceName = getConstantPoolMUTF8(c, interfaceIndex);
+		}
+		
+		//c->interfaceNames = vmCalloc(c->interfaceNamesCount, sizeof(char*));
 	}
 
 	c->fieldBlockCount = readClassUint16(classFile);
@@ -414,9 +495,9 @@ void linkClass(ClassLoader * classLoader, Class * c)
 	c->classLoader = classLoader;
 }
 
-Class * loadClass(VMInstance * vm, const char * bootClass)
+Class * loadClass(VMInstance * vm, const char * className)
 {
-	ClassFile * classFile = loadClassFile(&vm->configArgs, bootClass);
+	ClassFile * classFile = loadClassFile(&vm->configArgs, className);
 	vmAssert(classFile != NULL);
 
 	Class * c = parseClassFile(classFile);
