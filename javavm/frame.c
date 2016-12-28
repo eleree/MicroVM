@@ -219,15 +219,11 @@ void pushOperandSlot(OperandStack * operandStack, Slot * slot)
 
 Slot * popOperandSlot(OperandStack * operandStack)
 {
-	operandStack->size--;
-	return &operandStack->slots[operandStack->size];
-	/*
 	Slot * s = vmCalloc(1, sizeof(Slot));;
 	operandStack->size--;
 	s->num = operandStack->slots[operandStack->size].num;
 	s->ref = operandStack->slots[operandStack->size].ref;
 	return s;
-	*/
 }
 
 Object * getOperandRefFromTop(OperandStack * self, uint16_t n)
