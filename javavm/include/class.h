@@ -129,6 +129,11 @@ typedef struct ConstantPool
 
 }ConstantPool;
 
+typedef union FieldSlot{
+	uint32_t num;
+	struct Object * ref;
+}FieldSlot;
+
 typedef struct Class
 {
 	uint16_t accessFlags;
@@ -139,8 +144,8 @@ typedef struct Class
 	char* * interfaceNames; // interfaceName  array
 	uint16_t constantPoolCount;
 	struct ConstantPool * constantPool;
-	uint16_t fieldBlockCount;
-	struct FieldBlock * fieldBlock;
+	uint16_t fieldsCount;
+	struct FieldBlock * fields;
 	uint16_t methodsCount;
 	struct MethodBlock * methods;
 	struct Class * superClass;
@@ -149,10 +154,10 @@ typedef struct Class
 	uint32_t instanceSlotCount;
 	uint32_t staticSlotCount;
 	uint32_t slotCount;
-	//Slot * staticVars;
+	union FieldSlot * staticVars;
 	struct ClassLoader * classLoader;
 	bool initStarted;
-	//Object * jClass;
+	struct Object * javaClass;
 	const char * sourceFile;
 }Class;
 
@@ -179,6 +184,8 @@ typedef struct FieldBlock
 		uint32_t integer;
 		uint64_t longInteger;
 	}constantValue;
+	uint16_t constValueIndex;
+	uint16_t slotId;
 }FieldBlock;
 
 typedef struct LineNumberTableEntry
@@ -276,5 +283,18 @@ MethodRef * getClassConstantPoolMethodRef(Class * c, uint16_t index);
 bool isMethodStatic(MethodBlock * method);
 
 MethodBlock * resolveMethod(MethodRef * methodRef);
+
+/* field */
+bool isFieldVolatile(struct FieldBlock * field);
+bool isFieldTransient(FieldBlock * field);
+bool isFieldEnum(FieldBlock * field);
+bool isFieldLongOrDouble(FieldBlock * field);
+bool isFieldPublic(FieldBlock * field);
+bool isFieldPrivate(FieldBlock * field);
+bool isFieldProtected(FieldBlock * field);
+bool isFieldStatic(FieldBlock * field);
+bool isFieldFinal(FieldBlock * field);
+bool isFieldSynthetic(FieldBlock * field);
+bool isFieldAccessibleTo(FieldBlock * field, struct Class * d);
 
 #endif

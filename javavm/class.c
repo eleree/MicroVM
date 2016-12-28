@@ -280,12 +280,12 @@ void resovleClassFileFields(ClassFile * classFile, Class * c, uint16_t fieldBloc
 	if (fieldBlockCount == 0)
 		return;
 
-	c->fieldBlock = vmCalloc(fieldBlockCount, sizeof(FieldBlock));
+	c->fields = vmCalloc(fieldBlockCount, sizeof(FieldBlock));
 	for (uint16_t i = 0; i < fieldBlockCount; i++)
 	{
 		uint16_t nameIndxe = 0;
 		uint16_t descriptorIndex = 0;
-		FieldBlock * field = c->fieldBlock + i;
+		FieldBlock * field = c->fields + i;
 		field->classMember.accessFlags = readClassUint16(classFile);
 		nameIndxe = readClassUint16(classFile);
 		descriptorIndex = readClassUint16(classFile);
@@ -457,8 +457,8 @@ Class * parseClassFile(ClassFile *classFile)
 		//c->interfaceNames = vmCalloc(c->interfaceNamesCount, sizeof(char*));
 	}
 
-	c->fieldBlockCount = readClassUint16(classFile);
-	resovleClassFileFields(classFile, c, c->fieldBlockCount);
+	c->fieldsCount = readClassUint16(classFile);
+	resovleClassFileFields(classFile, c, c->fieldsCount);
 
 	c->methodsCount = readClassUint16(classFile);
 	resovleClassFileMethods(classFile, c, c->methodsCount);
@@ -542,9 +542,73 @@ void defineClass(ClassLoader * classLoader, Class * c)
 	addClassLoaderList(classLoader, c);
 }
 
+void verify(Class * class)
+{
+
+}
+
+void calcInstanceFieldCount(Class * c)
+{
+	uint16_t slotId = 0;
+	if (c->superClass != NULL)
+	{
+		slotId = c->superClass->instanceSlotCount;
+	}
+	for (uint16_t i = 0; i < c->fieldsCount; i++)
+	{
+		if (!isFieldStatic(&c->fields[i]))
+		{
+			c->fields[i].slotId = slotId;
+			slotId++;
+			if (isFieldLongOrDouble(&c->fields[i]))
+				slotId++;
+		}
+	}
+	c->instanceSlotCount = slotId;
+}
+
+void calcClassStaticFieldCount(Class * c)
+{
+	uint16_t slotId = 0;
+	for (uint16_t i = 0; i < c->fieldsCount; i++)
+	{
+		if (isFieldStatic(&c->fields[i]))
+		{
+			c->fields[i].slotId = slotId;
+			slotId++;
+			if (isFieldLongOrDouble(&c->fields[i]))
+				slotId++;
+		}
+	}
+	c->staticSlotCount = slotId;
+}
+
+void initClassStaticField(Class * c)
+{
+	c->staticVars = NULL;
+	if (c->staticSlotCount == 0)
+		return;
+	c->staticVars = calloc(c->staticSlotCount, sizeof(Slot));
+	for (uint16_t i = 0; i < c->fieldsCount; i++)
+	{
+		if (isFieldStatic(c->fields + i) && isFieldFinal(c->fields + i))
+		{
+			//initStaticFinalVar(c, c->fields + i);
+		}
+	}
+}
+
+void prepare(Class * c) 
+{
+	calcInstanceFieldCount(c);
+	calcClassStaticFieldCount(c);
+	initClassStaticField(c);
+}
+
 void linkClass(ClassLoader * classLoader, Class * c)
 {
-	c->classLoader = classLoader;
+	verify(c);
+	prepare(c);	
 }
 
 Class * loadClass(ClassLoader * classLoader, const char * className)
@@ -570,8 +634,8 @@ void releaseClass(Class * c)
 	if (c->constantPool!=NULL)
 		vmFree(c->constantPool);
 
-	if (c->fieldBlock != NULL)
-		vmFree(c->fieldBlock);
+	if (c->fields != NULL)
+		vmFree(c->fields);
 
 }
 
