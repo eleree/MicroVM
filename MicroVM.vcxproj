@@ -68,6 +68,7 @@
     <ClCompile Include="javavm\class.c" />
     <ClCompile Include="javavm\classfile.c" />
     <ClCompile Include="javavm\classVerify.c" />
+    <ClCompile Include="javavm\fieldSlot.c" />
     <ClCompile Include="javavm\frame.c" />
     <ClCompile Include="javavm\interpreter.c" />
     <ClCompile Include="javavm\jar.c" />

@@ -297,4 +297,16 @@ bool isFieldFinal(FieldBlock * field);
 bool isFieldSynthetic(FieldBlock * field);
 bool isFieldAccessibleTo(FieldBlock * field, struct Class * d);
 
+/* field operations */
+void setFieldSlotInt(FieldSlot * slot, uint16_t index, int32_t val);
+int32_t getFieldSlotInt(FieldSlot * slot, uint16_t index);
+void setFieldSlotFloat(FieldSlot * slot, uint16_t index, float val);
+float getFieldSlotFloat(FieldSlot * slot, uint16_t index);
+void setFieldSlotLong(FieldSlot * slot, uint16_t index, int64_t val);
+int64_t getFieldSlotLong(FieldSlot * slot, uint16_t index);
+void setFieldSlotDouble(FieldSlot * slot, uint16_t index, double val);
+double getFieldSlotDouble(FieldSlot * slot, uint16_t index);
+void setFieldSlotRef(FieldSlot * slot, uint16_t index, Object * ref);
+Object * getFieldSlotRef(FieldSlot * slot, uint16_t index);
+
 #endif

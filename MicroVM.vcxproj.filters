@@ -66,6 +66,9 @@
     <ClCompile Include="javavm\resolve.c">
       <Filter>源文件\javavm</Filter>
     </ClCompile>
+    <ClCompile Include="javavm\fieldSlot.c">
+      <Filter>源文件\javavm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="javavm\include\jar.h">

@@ -522,8 +522,6 @@ void resolveInterfaces(ClassLoader * classLoader, Class * subClass)
 {
 	if (subClass->interfacesCount == 0)
 		return;
-	if (subClass->interfaceNamesCount != subClass->interfacesCount)
-		printf("Interface Name Count != Interface Count, maybe this is a BUG.\n");
 
 	subClass->interfaces = calloc(subClass->interfacesCount, sizeof(Class *));
 	for (uint16_t i = 0; i < subClass->interfacesCount; i++)
@@ -531,7 +529,6 @@ void resolveInterfaces(ClassLoader * classLoader, Class * subClass)
 		subClass->interfaces[i] = loadClass(classLoader, subClass->interfaceNames[i]);
 	}
 }
-
 
 //jvms-5.4
 void defineClass(ClassLoader * classLoader, Class * c)
@@ -583,17 +580,55 @@ void calcClassStaticFieldCount(Class * c)
 	c->staticSlotCount = slotId;
 }
 
+void initStaticFinalField(Class * c, FieldBlock * field)
+{
+	uint16_t slotId = field->slotId;
+	FieldSlot * staticVars = c->staticVars;
+	uint16_t cpIndex = field->constValueIndex;
+	ConstantPool * cp = c->constantPool + cpIndex;
+	if (cpIndex > 0)
+	{
+		switch (field->classMember.descriptor[0])
+		{
+		case 'Z':
+		case 'B':
+		case 'C':
+		case 'S':
+		case 'I':
+			setFieldSlotInt(staticVars, slotId, cp->cpItem.s32);
+			break;
+		case 'J':
+			setFieldSlotLong(staticVars, slotId, cp->cpItem.s64);
+			break;
+		case 'F':
+			setFieldSlotFloat(staticVars, slotId, cp->cpItem.floatVal);
+			break;
+		case 'D':
+			setFieldSlotDouble(staticVars, slotId, cp->cpItem.doubleVal);
+			break;
+		default:
+			break;
+		}
+		if (strcmp(field->classMember.descriptor, "Ljava/lang/String;") == 0)
+		{
+			//String * s = getClassConstantPoolStringRef(constantPool, cpIndex);
+			//Object * jStr = jString(c->classLoader, s);
+			//setSlotRef(staticVars, slotId, jStr);
+		}
+	}
+}
+
 void initClassStaticField(Class * c)
 {
 	c->staticVars = NULL;
 	if (c->staticSlotCount == 0)
 		return;
-	c->staticVars = calloc(c->staticSlotCount, sizeof(Slot));
+	c->staticVars = calloc(c->staticSlotCount, sizeof(FieldSlot));
 	for (uint16_t i = 0; i < c->fieldsCount; i++)
 	{
 		if (isFieldStatic(c->fields + i) && isFieldFinal(c->fields + i))
 		{
-			//initStaticFinalVar(c, c->fields + i);
+			initStaticFinalField(c, c->fields + i);
 		}
 	}
 }

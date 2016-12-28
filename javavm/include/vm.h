@@ -30,6 +30,28 @@ typedef struct VMInstance
 	struct ClassLoader * bootstrapLoader;
 }VMInstance;
 
+
+typedef union FloatInt
+{
+	uint32_t bitsData;
+	float floatData;
+}FloatInt;
+
+typedef union LongInt
+{
+	struct bitsData{
+		uint32_t low;
+		uint32_t high;
+	};
+	int64_t  longData;
+}LongInt;
+
+typedef union DoubleLong
+{
+	uint64_t bitsData;
+	double doubleData;
+}DoubleLong;
+
 void * createVM(void);
 
 int32_t startVM(void* vm, int32_t argc, char** argv);
