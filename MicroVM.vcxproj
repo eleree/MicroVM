@@ -70,6 +70,7 @@
     <ClCompile Include="javavm\classVerify.c" />
     <ClCompile Include="javavm\fieldSlot.c" />
     <ClCompile Include="javavm\frame.c" />
+    <ClCompile Include="javavm\instructions.c" />
     <ClCompile Include="javavm\interpreter.c" />
     <ClCompile Include="javavm\jar.c" />
     <ClCompile Include="javavm\memory.c" />
@@ -87,6 +88,7 @@
     <ClInclude Include="javavm\include\class.h" />
     <ClInclude Include="javavm\include\classfile.h" />
     <ClInclude Include="javavm\include\frame.h" />
+    <ClInclude Include="javavm\include\interpreter.h" />
     <ClInclude Include="javavm\include\jar.h" />
     <ClInclude Include="javavm\include\midpInflateint.h" />
     <ClInclude Include="javavm\include\midpInflatetables.h" />

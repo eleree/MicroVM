@@ -675,17 +675,45 @@ void releaseClass(Class * c)
 }
 
 
+void initSuperClass(Thread * thread, Class * c)
+{
+	if (!isClassInterface(c))
+	{
+		Class * superClass = c->superClass;
+		if (superClass != NULL && !superClass->initStarted)
+		{
+			initClass(thread, superClass);
+		}
+	}
+}
+
+void scheduleClinit(Thread * thread, Class * c)
+{
+	MethodBlock * clinit = getClassClinitMethod(c);
+	if (clinit != NULL)
+	{
+		Frame * nFrame = newFrame(thread, clinit, clinit->maxLocals, clinit->maxStack);
+		pushThreadFrame(thread, nFrame);
+	}
+}
+
+
 void initClass(Thread * thread, Class * c)
 {
 
 }
+
+bool isClassInterface(Class * c)
+{
+	return 0 != (c->accessFlags&ACC_INTERFACE);
+}
+
 
 bool isMethodStatic(MethodBlock * method)
 {
 	vmAssert(method != NULL);
 	return	0 != (method->classMember.accessFlags & ACC_STATIC);
 }
-
 
 MethodBlock * getClassStaticMethod(Class * c, const char * name, const char * descriptor)
 {
@@ -702,4 +730,9 @@ MethodBlock * getClassStaticMethod(Class * c, const char * name, const char * de
 MethodBlock * getClassMainMethod(Class * c)
 {
 	return getClassStaticMethod(c, "main", "([Ljava/lang/String;)V");
+}
+
+MethodBlock * getClassClinitMethod(Class * c)
+{
+	return getClassStaticMethod(c, "<clinit>", "()V");
 }

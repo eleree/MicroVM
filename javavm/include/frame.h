@@ -21,7 +21,7 @@ typedef struct OperandStack{
 	Slot  slots[0];
 }OperandStack;
 
-typedef struct  Frame  {
+typedef struct Frame  {
 	struct Frame * lower; // stack is implemented as linked list
 	struct LocalVars * localVars;
 	struct OperandStack * operandStack;
@@ -30,7 +30,6 @@ typedef struct  Frame  {
 	int32_t lastpc;
 	struct MethodBlock * method;	
 }Frame;
-
 
 OperandStack * newOperandStack(uint32_t maxStack);
 void freeOperandStack(OperandStack* operandStack);
@@ -79,6 +78,13 @@ double getLocalVarsDouble(LocalVars * localVars, int32_t index);
 void setLocalVarsRef(LocalVars * localVars, int32_t index, Object * ref);
 Object * getLocalVarsRef(LocalVars * localVars, int32_t index);
 
+Object * getLocalVarsRef(LocalVars * localVars, int32_t index);
+void setLocalVarsSlot(LocalVars * localVars, int32_t index, Slot * slot);
+
+Object * getLocalVarsThis(LocalVars * self);
+bool getLocalVarsBoolean(LocalVars * self, int32_t index);
+
 Frame * newFrame(struct Thread * thread, struct MethodBlock * method, uint32_t maxLocals, uint32_t maxStack);
+void freeFrame(Frame * frame);
 
 #endif

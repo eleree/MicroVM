@@ -119,8 +119,8 @@ void freeOperandStack(OperandStack* operandStack)
 	if (operandStack != NULL)
 	{
 		if (operandStack->maxSize > 0)
-			free(operandStack->slots);
-		free(operandStack);
+			vmFree(operandStack->slots);
+		vmFree(operandStack);
 	}
 }
 
@@ -282,6 +282,6 @@ void freeFrame(Frame * frame)
 	{
 		freeLocalVars(frame->localVars);
 		freeOperandStack(frame->operandStack);
-		free(frame);
+		vmFree(frame);
 	}
 }

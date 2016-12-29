@@ -271,6 +271,7 @@ Class * parseClassFile(struct ClassFile * classFile);
 Class * loadClass(struct ClassLoader * classLoader, const char * className);
 
 MethodBlock * getClassMainMethod(Class * c);
+MethodBlock * getClassClinitMethod(Class * c);
 
 /* constant pool */
 const char * getConstantPoolMUTF8(Class * c, uint16_t index);
@@ -283,6 +284,9 @@ MethodRef * getClassConstantPoolMethodRef(Class * c, uint16_t index);
 bool isMethodStatic(MethodBlock * method);
 
 MethodBlock * resolveMethod(MethodRef * methodRef);
+
+/* class */
+bool isClassInterface(Class * c);
 
 /* field */
 bool isFieldVolatile(struct FieldBlock * field);

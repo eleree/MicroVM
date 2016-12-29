@@ -69,6 +69,9 @@
     <ClCompile Include="javavm\fieldSlot.c">
       <Filter>源文件\javavm</Filter>
     </ClCompile>
+    <ClCompile Include="javavm\instructions.c">
+      <Filter>源文件\javavm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="javavm\include\jar.h">
@@ -105,6 +108,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="javavm\include\frame.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="javavm\include\interpreter.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

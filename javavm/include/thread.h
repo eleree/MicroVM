@@ -16,11 +16,11 @@ typedef struct Thread
 	FrameStack *stack;	
 }Thread;
 
-
-
 Thread * newThread(void);
 void pushThreadFrame(Thread * thread, Frame * frame);
 Frame * getCurrentFrame(Thread * thread);
 int32_t getFrameNextPC(Frame *frame);
+Frame * popThreadFrame(Thread * thread);
+Frame * getCurrentFrame(Thread * thread);
 
 #endif

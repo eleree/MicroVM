@@ -2,57 +2,25 @@
 #include "thread.h"
 #include "include\opcodes.h"
 #include "frame.h"
+#include "include\interpreter.h"
 #include <math.h>
 
-typedef union{
-	uint8_t b;
-	uint16_t s;
-	union{
-		uint16_t index;
-		uint8_t count;
-		uint8_t zero;
-	}invokeInterface;
-	union{
-		uint16_t index;
-		uint8_t dimensions;
-	}multiAnewArray;
-	struct {
-		uint8_t Index;
-		int8_t Const;
-	}iinc;
-}Operand;
-
-
 void InvokeMethod(Frame * invokerFrame, MethodBlock * method) {
+	Thread * thread = invokerFrame->thread;
+	Frame * frame = newFrame(thread, method, method->maxLocals, method->maxStack);
+	pushThreadFrame(thread, frame);
 
-}
-//jvms 5.4.3.3.Method Resolution
-static void execute_INVOKE_STATIC(struct Frame * frame, uint16_t index)
-{
-	OperandStack * operandStack = frame->operandStack;
-
-	MethodRef * methodRef = getClassConstantPoolMethodRef(frame->method->classMember.attachClass, index);
-
-	MethodBlock * method = resolveMethod(methodRef);
-
-	if (!isMethodStatic(method))
+	int32_t argSlotSlot = method->argSlotCount;
+	if (argSlotSlot > 0)
 	{
-		printf("java.lang.IncompatibleClassChangeError\n");
-		exit(131);
+		for (int32_t i = argSlotSlot - 1; i >= 0; i--)
+		{
+			Slot * slot = popOperandSlot(invokerFrame->operandStack);
+			setLocalVarsSlot(frame->localVars, i, slot);
+		}
 	}
-
-	Class * c = method->classMember.attachClass;
-
-	if (!c->initStarted)
-	{
-		//revertFrameNextPC(frame);
-		frame->nextpc = frame->thread->pc;
-		initClass(frame->thread, c);
-	}
-
-	//printf("Invode classs:%s method:%s,desc:%s\n", methodRef->symRef.className, methodRef->name, methodRef->descriptor);
-	InvokeMethod(frame, method);
 }
+
 
 void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_t opcodeLen)
 {
@@ -78,166 +46,64 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 	OperandStack * operandStack = frame->operandStack;
 	LocalVars * localVars = frame->localVars;
 
+#define CASE_OPCODE(label,frame,operand)\
+	void execute_##label(Frame *, void *); \
+	case label:\
+	execute_##label(frame, operand); \
+	break;
+
+#define CASE_SIMPLE_OPCODE(label,function)\
+	case label:\
+	{function;}break;
+
 	switch (opcode)
 	{
-	case opc_nop:
-		break;
-	case opc_aconst_null:
-		pushOperandRef(frame->operandStack, NULL);
-		break;
-	case opc_iconst_m1:
-		pushOperandInt(frame->operandStack, -1);
-		break;
-	case opc_iconst_0:
-		pushOperandInt(frame->operandStack, 0);
-		break;
-	case opc_iconst_1:
-		pushOperandInt(frame->operandStack, 1);
-		break;
-	case opc_iconst_2:
-		pushOperandInt(frame->operandStack, 2);
-		break;
-	case opc_iconst_3:
-		pushOperandInt(frame->operandStack, 3);
-		break;
-	case opc_iconst_4:
-		pushOperandInt(frame->operandStack, 4);
-		break;
-	case opc_iconst_5:
-		pushOperandInt(frame->operandStack, 5);
-		break;
-	case opc_lconst_0:
-		pushOperandLong(frame->operandStack, 0);
-		break;
-	case opc_lconst_1:
-		pushOperandLong(frame->operandStack, 1);
-		break;
-	case opc_fconst_0:
-		pushOperandFloat(frame->operandStack, 0);
-		break;
-	case opc_fconst_1:
-		pushOperandFloat(frame->operandStack, 1);
-		break;
-	case opc_fconst_2:
-		pushOperandFloat(frame->operandStack, 2);
-		break;
-	case opc_dconst_0:
-		pushOperandDouble(frame->operandStack, 0);
-		break;
-	case opc_dconst_1:
-		pushOperandDouble(frame->operandStack, 1);
-		break;
-	case opc_bipush:
-		pushOperandInt(frame->operandStack, operand.b);
-		break;
-	case opc_sipush:
-		pushOperandInt(frame->operandStack, operand.s);
-		break;
-	case opc_ldc:
-		switch (frame->method->classMember.attachClass->constantPool[operand.b].cpType){
-		case CONSTATNT_INTEGER:
-			pushOperandInt(frame->operandStack, frame->method->classMember.attachClass->constantPool[operand.b].cpItem.u32);
-			break;
-		case CONSTATNT_FLOAT:
-			break;
-		case CONSTATNT_STRING:
-			break;
-		case CONSTATNT_CLASS:
-			break;
-		}
-		break;
-	case opc_ldc_w:
-		break;
-	case opc_ldc2_w:
-		switch (frame->method->classMember.attachClass->constantPool[operand.b].cpType)
-		{
-		case CONSTATNT_LONG:
-			pushOperandLong(operandStack, frame->method->classMember.attachClass->constantPool[operand.b].cpItem.s64);
-			break;
-		case CONSTATNT_DOUBLE:
-			pushOperandDouble(operandStack, frame->method->classMember.attachClass->constantPool[operand.b].cpItem.doubleVal);
-			break;
-		default:
-			printf("java.lang.ClassFormatError\n");
-			exit(0);
-			break;
-		}
-		break;
-	case opc_iload:
-		pushOperandInt(operandStack, getLocalVarsInt(localVars, operand.b));
-		break;
-	case opc_lload:
-		pushOperandLong(operandStack, getLocalVarsLong(localVars, operand.b));
-		break;
-	case opc_fload:
-		pushOperandFloat(operandStack, getLocalVarsFloat(localVars, operand.b));
-		break;
-	case opc_dload:
-		pushOperandDouble(operandStack, getLocalVarsDouble(localVars, operand.b));
-		break;
-	case opc_aload:
-		pushOperandRef(operandStack, getLocalVarsRef(localVars, operand.b));
-		break;
-	case opc_iload_0:
-		pushOperandInt(operandStack, getLocalVarsInt(localVars, 0));
-		break;
-	case opc_iload_1:
-		pushOperandInt(operandStack, getLocalVarsInt(localVars, 1));
-		break;
-	case opc_iload_2:
-		pushOperandInt(operandStack, getLocalVarsInt(localVars, 2));
-		break;
-	case opc_iload_3:
-		pushOperandInt(operandStack, getLocalVarsInt(localVars, 3));
-		break;
-	case opc_lload_0:
-		pushOperandLong(operandStack, getLocalVarsLong(localVars, 0));
-		break;
-	case opc_lload_1:
-		pushOperandLong(operandStack, getLocalVarsLong(localVars, 1));
-		break;
-	case opc_lload_2:
-		pushOperandLong(operandStack, getLocalVarsLong(localVars, 2));
-		break;
-	case opc_lload_3:
-		pushOperandLong(operandStack, getLocalVarsLong(localVars, 2));
-		break;
-	case opc_fload_0:
-		pushOperandFloat(operandStack, getLocalVarsFloat(localVars, 0));
-		break;
-	case opc_fload_1:
-		pushOperandFloat(operandStack, getLocalVarsFloat(localVars, 1));
-		break;
-	case opc_fload_2:
-		pushOperandFloat(operandStack, getLocalVarsFloat(localVars, 2));
-		break;
-	case opc_fload_3:
-		pushOperandFloat(operandStack, getLocalVarsFloat(localVars, 3));
-		break;
-	case opc_dload_0:
-		pushOperandDouble(operandStack, getLocalVarsDouble(localVars, 0));
-		break;
-	case opc_dload_1:
-		pushOperandDouble(operandStack, getLocalVarsDouble(localVars, 1));
-		break;
-	case opc_dload_2:
-		pushOperandDouble(operandStack, getLocalVarsDouble(localVars, 2));
-		break;
-	case opc_dload_3:
-		pushOperandDouble(operandStack, getLocalVarsDouble(localVars, 3));
-		break;
-	case opc_aload_0:
-		pushOperandRef(operandStack, getLocalVarsRef(localVars, 0));
-		break;
-	case opc_aload_1:
-		pushOperandRef(operandStack, getLocalVarsRef(localVars, 1));
-		break;
-	case opc_aload_2:
-		pushOperandRef(operandStack, getLocalVarsRef(localVars, 2));
-		break;
-	case opc_aload_3:
-		pushOperandRef(operandStack, getLocalVarsRef(localVars, 3));
-		break;
+		CASE_OPCODE(opc_nop, frame, NULL);
+		CASE_SIMPLE_OPCODE(opc_aconst_null, pushOperandRef(frame->operandStack, NULL));
+		CASE_SIMPLE_OPCODE(opc_iconst_m1, pushOperandInt(frame->operandStack, -1));
+		CASE_SIMPLE_OPCODE(opc_iconst_0, pushOperandInt(frame->operandStack, 0));
+		CASE_SIMPLE_OPCODE(opc_iconst_1, pushOperandInt(frame->operandStack, 1));
+		CASE_SIMPLE_OPCODE(opc_iconst_2, pushOperandInt(frame->operandStack, 2));
+		CASE_SIMPLE_OPCODE(opc_iconst_3, pushOperandInt(frame->operandStack, 3));
+		CASE_SIMPLE_OPCODE(opc_iconst_4, pushOperandInt(frame->operandStack, 4));
+		CASE_SIMPLE_OPCODE(opc_iconst_5, pushOperandInt(frame->operandStack, 5));
+		CASE_SIMPLE_OPCODE(opc_lconst_0, pushOperandLong(frame->operandStack, 0));
+		CASE_SIMPLE_OPCODE(opc_lconst_1, pushOperandLong(frame->operandStack, 1));
+		CASE_SIMPLE_OPCODE(opc_fconst_0, pushOperandFloat(frame->operandStack, 0));
+		CASE_SIMPLE_OPCODE(opc_fconst_1, pushOperandFloat(frame->operandStack, 1));
+		CASE_SIMPLE_OPCODE(opc_fconst_2, pushOperandFloat(frame->operandStack, 2));
+		CASE_SIMPLE_OPCODE(opc_dconst_0, pushOperandDouble(frame->operandStack, 0));
+		CASE_SIMPLE_OPCODE(opc_dconst_1, pushOperandDouble(frame->operandStack, 1));
+		CASE_SIMPLE_OPCODE(opc_bipush, pushOperandInt(frame->operandStack, operand.b));
+		CASE_SIMPLE_OPCODE(opc_sipush, pushOperandInt(frame->operandStack, operand.s));
+		CASE_OPCODE(opc_ldc, frame, &operand);
+		CASE_OPCODE(opc_ldc_w, frame, &operand);
+		CASE_OPCODE(opc_ldc2_w, frame, &operand);
+		CASE_SIMPLE_OPCODE(opc_iload, pushOperandInt(operandStack, getLocalVarsInt(localVars, operand.b)));
+		CASE_SIMPLE_OPCODE(opc_lload, pushOperandLong(operandStack, getLocalVarsLong(localVars, operand.b)));			
+		CASE_SIMPLE_OPCODE(opc_fload, pushOperandFloat(operandStack, getLocalVarsFloat(localVars, operand.b)));
+		CASE_SIMPLE_OPCODE(opc_dload, pushOperandDouble(operandStack, getLocalVarsDouble(localVars, operand.b)));
+		CASE_SIMPLE_OPCODE(opc_aload, pushOperandRef(operandStack, getLocalVarsRef(localVars, operand.b)));
+		CASE_SIMPLE_OPCODE(opc_iload_0,	pushOperandInt(operandStack, getLocalVarsInt(localVars, 0)));
+		CASE_SIMPLE_OPCODE(opc_iload_1,	pushOperandInt(operandStack, getLocalVarsInt(localVars, 1)));
+		CASE_SIMPLE_OPCODE(opc_iload_2,	pushOperandInt(operandStack, getLocalVarsInt(localVars, 2)));
+		CASE_SIMPLE_OPCODE(opc_iload_3,	pushOperandInt(operandStack, getLocalVarsInt(localVars, 3)));
+		CASE_SIMPLE_OPCODE(opc_lload_0,	pushOperandLong(operandStack, getLocalVarsLong(localVars, 0)));
+		CASE_SIMPLE_OPCODE(opc_lload_1,	pushOperandLong(operandStack, getLocalVarsLong(localVars, 1)));		
+		CASE_SIMPLE_OPCODE(opc_lload_2,	pushOperandLong(operandStack, getLocalVarsLong(localVars, 2)));		
+		CASE_SIMPLE_OPCODE(opc_lload_3, pushOperandLong(operandStack, getLocalVarsLong(localVars, 3)));
+		CASE_SIMPLE_OPCODE(opc_fload_0,	pushOperandFloat(operandStack, getLocalVarsFloat(localVars, 0)));
+		CASE_SIMPLE_OPCODE(opc_fload_1, pushOperandFloat(operandStack, getLocalVarsFloat(localVars, 1)));
+		CASE_SIMPLE_OPCODE(opc_fload_2,	pushOperandFloat(operandStack, getLocalVarsFloat(localVars, 2)));
+		CASE_SIMPLE_OPCODE(opc_fload_3,	pushOperandFloat(operandStack, getLocalVarsFloat(localVars, 3)));
+		CASE_SIMPLE_OPCODE(opc_dload_0,	pushOperandDouble(operandStack, getLocalVarsDouble(localVars, 0)));
+		CASE_SIMPLE_OPCODE(opc_dload_1, pushOperandDouble(operandStack, getLocalVarsDouble(localVars, 1)));
+		CASE_SIMPLE_OPCODE(opc_dload_2,	pushOperandDouble(operandStack, getLocalVarsDouble(localVars, 2)));
+		CASE_SIMPLE_OPCODE(opc_dload_3,	pushOperandDouble(operandStack, getLocalVarsDouble(localVars, 3)));		
+		CASE_SIMPLE_OPCODE(opc_aload_0,	pushOperandRef(operandStack, getLocalVarsRef(localVars, 0)));
+		CASE_SIMPLE_OPCODE(opc_aload_1,	pushOperandRef(operandStack, getLocalVarsRef(localVars, 1)));
+		CASE_SIMPLE_OPCODE(opc_aload_2,	pushOperandRef(operandStack, getLocalVarsRef(localVars, 2)));		
+		CASE_SIMPLE_OPCODE(opc_aload_3,	pushOperandRef(operandStack, getLocalVarsRef(localVars, 3)));
 	case opc_iaload:
 		break;
 	case opc_laload:
@@ -254,81 +120,31 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 		break;
 	case opc_saload:
 		break;
-	case opc_istore:
-		setLocalVarsInt(localVars, operand.b, popOperandInt(operandStack));
-		break;
-	case opc_lstore:
-		setLocalVarsLong(localVars, operand.b, popOperandLong(operandStack));
-		break;
-	case opc_fstore:
-		setLocalVarsFloat(localVars, operand.b, popOperandFloat(operandStack));
-		break;
-	case opc_dstore:
-		setLocalVarsDouble(localVars, operand.b, popOperandDouble(operandStack));
-		break;
-	case opc_astore:
-		setLocalVarsRef(localVars, operand.b, popOperandRef(operandStack));
-		break;
-	case opc_istore_0:
-		setLocalVarsInt(localVars, 0, popOperandInt(operandStack));
-		break;
-	case opc_istore_1:
-		setLocalVarsInt(localVars, 1, popOperandInt(operandStack));
-		break;
-	case opc_istore_2:
-		setLocalVarsInt(localVars, 2, popOperandInt(operandStack));
-		break;
-	case opc_istore_3:
-		setLocalVarsInt(localVars, 3, popOperandInt(operandStack));
-		break;
-	case opc_lstore_0:
-		setLocalVarsLong(localVars, 0, popOperandLong(operandStack));
-		break;
-	case opc_lstore_1:
-		setLocalVarsLong(localVars, 1, popOperandLong(operandStack));
-		break;
-	case opc_lstore_2:
-		setLocalVarsLong(localVars, 2, popOperandLong(operandStack));
-		break;
-	case opc_lstore_3:
-		setLocalVarsLong(localVars, 3, popOperandLong(operandStack));
-		break;
-	case opc_fstore_0:
-		setLocalVarsFloat(localVars, 0, popOperandFloat(operandStack));
-		break;
-	case opc_fstore_1:
-		setLocalVarsFloat(localVars, 1, popOperandFloat(operandStack));
-		break;
-	case opc_fstore_2:
-		setLocalVarsFloat(localVars, 2, popOperandFloat(operandStack));
-		break;
-	case opc_fstore_3:
-		setLocalVarsFloat(localVars, 3, popOperandFloat(operandStack));
-		break;
-	case opc_dstore_0:
-		setLocalVarsDouble(localVars, 0, popOperandDouble(operandStack));
-		break;
-	case opc_dstore_1:
-		setLocalVarsDouble(localVars, 1, popOperandDouble(operandStack));
-		break;
-	case opc_dstore_2:
-		setLocalVarsDouble(localVars, 2, popOperandDouble(operandStack));
-		break;
-	case opc_dstore_3:
-		setLocalVarsDouble(localVars, 3, popOperandDouble(operandStack));
-		break;
-	case opc_astore_0:
-		setLocalVarsRef(localVars, 0, popOperandRef(operandStack));
-		break;
-	case opc_astore_1:
-		setLocalVarsRef(localVars, 1, popOperandRef(operandStack));
-		break;
-	case opc_astore_2:
-		setLocalVarsRef(localVars, 2, popOperandRef(operandStack));
-		break;
-	case opc_astore_3:
-		setLocalVarsRef(localVars, 3, popOperandRef(operandStack));
-		break;
+		CASE_SIMPLE_OPCODE(opc_istore, setLocalVarsInt(localVars, operand.b, popOperandInt(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_lstore, setLocalVarsLong(localVars, operand.b, popOperandLong(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_fstore, setLocalVarsFloat(localVars, operand.b, popOperandFloat(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_dstore, setLocalVarsDouble(localVars, operand.b, popOperandDouble(operandStack)));		
+		CASE_SIMPLE_OPCODE(opc_astore, setLocalVarsRef(localVars, operand.b, popOperandRef(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_istore_0, setLocalVarsInt(localVars, 0, popOperandInt(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_istore_1, setLocalVarsInt(localVars, 1, popOperandInt(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_istore_2, setLocalVarsInt(localVars, 2, popOperandInt(operandStack)));		
+		CASE_SIMPLE_OPCODE(opc_istore_3, setLocalVarsInt(localVars, 3, popOperandInt(operandStack)));		
+		CASE_SIMPLE_OPCODE(opc_lstore_0, setLocalVarsLong(localVars, 0, popOperandLong(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_lstore_1, setLocalVarsLong(localVars, 1, popOperandLong(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_lstore_2, setLocalVarsLong(localVars, 2, popOperandLong(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_lstore_3, setLocalVarsLong(localVars, 3, popOperandLong(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_fstore_0, setLocalVarsFloat(localVars, 0, popOperandFloat(operandStack)));		
+		CASE_SIMPLE_OPCODE(opc_fstore_1, setLocalVarsFloat(localVars, 1, popOperandFloat(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_fstore_2, setLocalVarsFloat(localVars, 2, popOperandFloat(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_fstore_3, setLocalVarsFloat(localVars, 3, popOperandFloat(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_dstore_0, setLocalVarsDouble(localVars, 0, popOperandDouble(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_dstore_1, setLocalVarsDouble(localVars, 1, popOperandDouble(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_dstore_2, setLocalVarsDouble(localVars, 2, popOperandDouble(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_dstore_3, setLocalVarsDouble(localVars, 3, popOperandDouble(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_astore_0, setLocalVarsRef(localVars, 0, popOperandRef(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_astore_1, setLocalVarsRef(localVars, 1, popOperandRef(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_astore_2, setLocalVarsRef(localVars, 2, popOperandRef(operandStack)));
+		CASE_SIMPLE_OPCODE(opc_astore_3, setLocalVarsRef(localVars, 3, popOperandRef(operandStack)));
 	case opc_iastore:
 		break;
 	case opc_lastore:
@@ -345,13 +161,8 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 		break;
 	case opc_sastore:
 		break;
-	case opc_pop:
-		popOperandSlot(operandStack);
-		break;
-	case opc_pop2:
-		popOperandSlot(operandStack);
-		popOperandSlot(operandStack);
-		break;
+		CASE_OPCODE(opc_pop, frame, NULL);		
+		CASE_OPCODE(opc_pop2, frame, NULL);
 	case opc_dup:
 	{
 					Slot * slot = popOperandSlot(operandStack);
@@ -1117,16 +928,21 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 	case opc_lookupswitch:
 		break;
 	case opc_ireturn:
+		execute_IRETURN(frame);
 		break;
 	case opc_lreturn:
+		execute_LRETURN(frame);
 		break;
 	case opc_freturn:
+		execute_FRETURN(frame);
 		break;
 	case opc_dreturn:
+		execute_DRETURN(frame);
 		break;
 	case opc_areturn:
 		break;
 	case opc_return:
+		execute_RETURN(frame);
 		break;
 	case opc_getstatic:
 		break;
@@ -1137,6 +953,7 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 	case opc_putfield:
 		break;
 	case opc_invokevirtual:
+		execute_INVOKE_VIRTUAL(frame, operand.s);
 		break;
 	case opc_invokespecial:
 		break;
@@ -1282,6 +1099,7 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 	frame->lastpc = frame->nextpc;
 	frame->nextpc += getOpcodeLen(opcode);
 }
+
 void dumpLocalVars(Frame * frame)
 {
 	LocalVars * localVars = frame->localVars;
