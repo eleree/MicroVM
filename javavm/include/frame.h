@@ -50,7 +50,8 @@ void pushOperandRef(OperandStack * operandStack, Object * ref);
 Object * popOperandRef(OperandStack * operandStack);
 
 void pushOperandSlot(OperandStack * operandStack, Slot * slot);
-Slot * popOperandSlot(OperandStack * operandStack);
+void popOperandSlot(OperandStack * operandStack);
+Slot * popOperandSlotRef(OperandStack * operandStack);
 
 Object * getOperandRefFromTop(OperandStack * self, uint16_t n);
 
