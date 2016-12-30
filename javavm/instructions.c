@@ -1025,8 +1025,9 @@ void _println(OperandStack * operandStack, const char * descriptor)
 	popOperandRef(operandStack);
 }
 
-int32_t execute_INVOKE_VIRTUAL(Frame * frame, uint16_t cpIndex)
+int32_t execute_opc_invokevirtual(Frame * frame, void * operand)
 {
+	uint16_t cpIndex = ((Operand*)operand)->s;
 	OperandStack * operandStack = frame->operandStack;
 	MethodRef * methodRef = getClassConstantPoolMethodRef(frame->method->classMember.attachClass, cpIndex);
 	MethodBlock * method = resolveMethod(methodRef);

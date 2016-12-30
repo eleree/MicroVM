@@ -62,6 +62,9 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 	case label:\
 	{function; }break;
 
+	frame->lastpc = frame->nextpc;
+	frame->nextpc += getOpcodeLen(opcode);
+
 	switch (opcode)
 	{
 		CASE_OPCODE(opc_nop, frame, NULL);
@@ -238,18 +241,15 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 			CASE_OPCODE_RETURN(opc_ifge, frame, NULL);
 			CASE_OPCODE_RETURN(opc_ifgt, frame, NULL);
 			CASE_OPCODE_RETURN(opc_ifle, frame, NULL);
-			CASE_OPCODE_RETURN(opc_if_icmpeq, frame, NULL);
-			CASE_OPCODE_RETURN(opc_if_icmpne, frame, NULL);
-			CASE_OPCODE_RETURN(opc_if_icmplt, frame, NULL);
-			CASE_OPCODE_RETURN(opc_if_icmpge, frame, NULL);
-			CASE_OPCODE_RETURN(opc_if_icmpgt, frame, NULL);	
-			CASE_OPCODE_RETURN(opc_if_icmple, frame, NULL);	
-			CASE_OPCODE_RETURN(opc_if_acmpeq, frame, NULL);
-			CASE_OPCODE_RETURN(opc_if_acmpne, frame, NULL);
-		case opc_goto:
-			frame->nextpc = frame->nextpc + (int16_t)operand.s;
-			return;
-			break;
+			CASE_OPCODE_RETURN(opc_if_icmpeq, frame, &operand);
+			CASE_OPCODE_RETURN(opc_if_icmpne, frame, &operand);
+			CASE_OPCODE_RETURN(opc_if_icmplt, frame, &operand);
+			CASE_OPCODE_RETURN(opc_if_icmpge, frame, &operand);
+			CASE_OPCODE_RETURN(opc_if_icmpgt, frame, &operand);	
+			CASE_OPCODE_RETURN(opc_if_icmple, frame, &operand);
+			CASE_OPCODE_RETURN(opc_if_acmpeq, frame, &operand);
+			CASE_OPCODE_RETURN(opc_if_acmpne, frame, &operand);
+			CASE_SIMPLE_OPCODE(opc_goto, frame->nextpc = frame->thread->pc + (int16_t)operand.s);
 		case opc_jsr:
 			break;
 		case opc_ret:
@@ -283,9 +283,7 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 			break;
 		case opc_putfield:
 			break;
-		case opc_invokevirtual:
-			execute_INVOKE_VIRTUAL(frame, operand.s);
-			break;
+			CASE_OPCODE(opc_invokevirtual,frame, &operand);			
 		case opc_invokespecial:
 			break;
 			CASE_OPCODE(opc_invokestatic, frame, &operand);
@@ -426,9 +424,6 @@ void processOpcode(Frame * frame, uint8_t opcode, uint8_t * operandBytes, uint8_
 			break;
 
 	}
-
-	frame->lastpc = frame->nextpc;
-	frame->nextpc += getOpcodeLen(opcode);
 }
 
 void dumpLocalVars(Frame * frame)
@@ -458,6 +453,7 @@ void interpret(Class * c, MethodBlock * method, Thread * thread, int argc, char 
 	{
 		frame = getCurrentFrame(thread);
 		pc = frame->nextpc;
+		frame->thread->pc = pc;
 		opcode = *(method->code + pc);
 		printf("pc:%d opcode: %d, name:%s\n", pc, opcode, getOpcodeName(opcode));
 		processOpcode(frame, opcode, method->code + pc + 1, getOpcodeLen(opcode));

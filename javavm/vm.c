@@ -10,7 +10,7 @@ void * createVM(void)
 	vm->bootstrapLoader = vmCalloc(1, sizeof(ClassLoader));
 	vm->configArgs.jrepath = "D:/jre";
 	vm->configArgs.bootpath = "D:/jre";
-	vm->configArgs.bootClass = "FibonacciTest";
+	vm->configArgs.bootClass = "GaussTest";
 	vm->bootstrapLoader->classpath = "D:/jre";
 	vm->bootstrapLoader->zippath = "D:/jre/rt.jar";
 	if (vm == NULL)
